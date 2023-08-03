@@ -5,6 +5,7 @@ import random
 from typing import Optional, Sequence, Set
 
 import numpy as np
+import logging
 
 from evals.record import Event
 
@@ -17,6 +18,34 @@ def get_accuracy(events: Sequence[Event]) -> float:
     else:
         return num_correct / num_total
 
+def get_each_sample_accuracy(sampled, expected) -> float:
+    levels_count = 0
+    skills_count = 0
+    # Check if both dictionaries have the same keys
+    if set(sampled.keys()) != set(expected.keys()):
+        return False
+
+    # Check if the values of corresponding keys are the same
+    for key in sampled.keys():
+        # print("isinstance(sampled[key], list) and isinstance(expected[key], list)", isinstance(sampled[key], list) and isinstance(expected[key], list))
+        if isinstance(sampled[key], list) and isinstance(expected[key], list):
+            # For lists, check if they contain the same elements (order may be different)
+            for element in sampled[key]:
+                if element in expected[key]:
+                    skills_count += 1
+        else:
+            # For other types, use the standard comparison
+            if sampled[key] == expected[key]:
+                levels_count += 1
+    
+    # Find the length of levels
+    expected_levels_length = len([key for key in expected.keys() if key.startswith('level')])
+    # Find the length of skills
+    expected_skills_length = len(expected['skills'])
+
+    levels_accuracy = levels_count/expected_levels_length
+    skills_accuracy = skills_count/expected_skills_length
+    return {"Subject tags accuracy": levels_accuracy, "Skills tags accuracy": skills_accuracy}
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
     vals = [m.data["correct"] for m in events]

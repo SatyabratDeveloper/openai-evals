@@ -72,6 +72,9 @@ def record_and_check_match(
     Returns:
         The matched option or None if no match found.
     """
+    logging.info(f"sampled: {sampled}")
+    logging.info(f"expected: {expected}")   
+    
     if isinstance(expected, tuple):
         expected = list(expected)
     elif not isinstance(expected, list):
