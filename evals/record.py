@@ -199,6 +199,9 @@ class RecorderBase:
         }
         self.record_event("match", data, sample_id=sample_id)
 
+    def record_each_sample_match(self, accuracy):
+        self.record_event("each_sample_match", data=accuracy)
+
     def record_embedding(self, prompt, embedding_type, sample_id=None, **extra):
         data = {
             "prompt": prompt,
@@ -213,7 +216,7 @@ class RecorderBase:
             "sampled": sampled,
             **extra,
         }
-        self.record_event("sampling", data, sample_id=sample_id)
+        # self.record_event("sampling", data, sample_id=sample_id)
 
     def record_cond_logp(self, prompt, completion, logp, sample_id=None, **extra):
         data = {
@@ -313,9 +316,9 @@ class LocalRecorder(RecorderBase):
     def __init__(self, log_path: Optional[str], run_spec: RunSpec):
         super().__init__(run_spec)
         self.event_file_path = log_path
-        if log_path is not None:
-            with bf.BlobFile(log_path, "wb") as f:
-                f.write((jsondumps({"spec": dataclasses.asdict(run_spec)}) + "\n").encode("utf-8"))
+        # if log_path is not None:
+        #     with bf.BlobFile(log_path, "wb") as f:
+        #         f.write((jsondumps({"spec": dataclasses.asdict(run_spec)}) + "\n").encode("utf-8"))
 
     def _flush_events_internal(self, events_to_write: Sequence[Event]):
         start = time.time()
@@ -564,6 +567,8 @@ def current_sample_id() -> str:
 def record_match(correct: bool, *, expected=None, picked=None, **extra):
     return default_recorder().record_match(correct, expected=expected, picked=picked, **extra)
 
+def record_each_sample_match(accuracy):
+    return default_recorder().record_each_sample_match(accuracy)
 
 def record_embedding(prompt, embedding_type, **extra):
     return default_recorder().record_embedding(prompt, embedding_type, **extra)
