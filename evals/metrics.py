@@ -22,6 +22,15 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
     subject_accuracy = 0
     inverted_value = 0
     matched_level_list = []
+    level_1 = ''
+    level_2 = ''
+    level_3 = ''
+    expected_level_1 = ''
+    expected_level_2 = ''
+    expected_level_3 = []
+    level_1_result = False
+    level_2_result = False
+    level_3_result = False
 
     output_list = list(subject_tags.values())
     expected_list = list(expected_subject_tags.values())
@@ -29,8 +38,23 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
     output_arr_length = len(output_list)
     expected_arr_length = len(expected_list)
 
+    # loop to find inverted tags and assigning the levels values
     for expected_index, expected_value in enumerate(expected_list):
+        if expected_index == 0:
+            expected_level_1 = expected_value[0]
+        if expected_index == 1:
+            expected_level_2 = expected_value[0]
+        else:
+            expected_level_3 = expected_value
+        
         for output_index, output_value in enumerate(output_list):
+            if output_index == 0:
+                level_1 = output_value
+            if output_index == 1:
+                level_2 = output_value
+            else:
+                level_3 = output_value
+            
             if expected_index == 0 or expected_index == 1:
                 if expected_value[0] == output_value:
                     matched_level_list.append(output_index)
@@ -49,24 +73,19 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
 
     # Subject Comparison
     if inverted_value != 'Inverted Output':
-        for expected_index, expected_value in enumerate(expected_list):
-            for output_index, output_value in enumerate(output_list):
-                if expected_index == 0:
-                    if expected_value[0] == output_value:
-                        print('a')
-                        subject_accuracy += 50 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else (100 if expected_arr_length == 1 else 33))
-                elif expected_index == 1:
-                    if expected_value[0] == output_value:
-                        print('b')
-                        subject_accuracy += 30 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else 33)
-                else:
-                    if output_value in expected_value:
-                        print('c')
-                        subject_accuracy += 20 if expected_arr_length == 3 and expected_arr_length else 33
+        if expected_level_1 == level_1 or expected_level_1 == level_2 or expected_level_1 == level_3:
+            level_1_result = True
+            subject_accuracy += 50 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else (100 if expected_arr_length == 1 else 33))
+        if expected_level_2 == level_1 or expected_level_2 == level_2 or expected_level_2 == level_3:
+            level_2_result = True
+            subject_accuracy += 30 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else 33)
+        if level_1 in expected_level_3 or level_2 in expected_level_3 or level_3 in expected_level_3:
+            level_3_result = True
+            subject_accuracy += 20 if expected_arr_length == 3 and expected_arr_length else 33
     
-    # print(f"Subject Tag Level 1: {level_1} === Expected Subject Tag--> Level 1: {expected_level_1}, {level_1 in expected_level_1 or level_1 in expected_level_2 or level_1 in expected_level_3}")
-    # print(f"Subject Tag Level 2: {level_2} === Expected Subject Tag--> Level 2: {expected_level_2}, {level_2 in expected_level_1 or level_2 in expected_level_2 or level_2 in expected_level_3}")
-    # print(f"Subject Tag Level 3: {level_3} === Expected Subject Tag--> Level 3: {expected_level_3}, {level_3 in expected_level_1 or level_2 in expected_level_2 or level_2 in expected_level_3}")
+    print(f"Subject Tag Level 1: {level_1} === Expected Subject Tag--> Level 1: {expected_level_1}, {level_1_result}")
+    print(f"Subject Tag Level 2: {level_2} === Expected Subject Tag--> Level 2: {expected_level_2}, {level_2_result}")
+    print(f"Subject Tag Level 3: {level_3} === Expected Subject Tag--> Level 3: {expected_level_3}, {level_3_result}")
     
     return subject_accuracy
 
@@ -91,6 +110,8 @@ def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
         skill_accuracy += 66
     elif correct_tags == expected_skill_tags_length:
         skill_accuracy += 100
+
+    # skill_accuracy = (correct_tags / expected_skill_tags) * 100
 
     return skill_accuracy
 

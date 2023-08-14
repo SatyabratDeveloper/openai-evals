@@ -152,7 +152,7 @@ class RecorderBase:
             events_to_write = self._events[self._written_events :]
             self._written_events = len(self._events)
             self._flushes_started += 1
-        self._flush_events_internal(events_to_write)
+        # self._flush_events_internal(events_to_write)
 
     def record_event(self, type, data=None, sample_id=None):
         if sample_id is None:
@@ -328,8 +328,8 @@ class LocalRecorder(RecorderBase):
             logger.error(f"Failed to serialize events: {events_to_write}")
             raise e
 
-        with bf.BlobFile(self.event_file_path, "ab") as f:
-            f.write(b"".join([l.encode("utf-8") for l in lines]))
+        # with bf.BlobFile(self.event_file_path, "ab") as f:
+        #     f.write(b"".join([l.encode("utf-8") for l in lines]))
 
         logger.info(
             f"Logged {len(lines)} rows of events to {self.event_file_path}: insert_time={t(time.time()-start)}"
@@ -339,8 +339,8 @@ class LocalRecorder(RecorderBase):
         self._flushes_done += 1
 
     def record_final_report(self, final_report: Any):
-        with bf.BlobFile(self.event_file_path, "ab") as f:
-            f.write((jsondumps({"final_report": final_report}) + "\n").encode("utf-8"))
+        # with bf.BlobFile(self.event_file_path, "ab") as f:
+        #     f.write((jsondumps({"final_report": final_report}) + "\n").encode("utf-8"))
 
         logging.info(f"Final report: {final_report}. Logged to {self.event_file_path}")
 

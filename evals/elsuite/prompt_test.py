@@ -5,57 +5,8 @@ import openai
 import logging
 import json
 from evals.record import record_each_sample_match
-# import numpy as np
-# import sentence_transformers
 
 openai.api_key = ""
-
-# def convert_words_to_vectors(words, word_embedding_model):
-#     """Converts a list of words into vectors using a word embedding model."""
-#     vectors = []
-#     for word in words:
-#         if word in word_embedding_model:
-#             vectors.append(word_embedding_model[word])
-#         else:
-#             vectors.append(np.zeros(word_embedding_model.vector_size))
-#     return vectors
-
-# def vec():
-#    # Load the Word2Vec model
-#     word_embedding_model = sentence_transformers.WordEmbedding.from_pretrained("word2vec_model.bin")
-
-#     # Convert the words "cat" and "dog" into vectors
-#     words = ["cat", "dog"]
-#     vectors = word_embedding_model(words)
-
-#     # Print the vectors
-#     print(vectors)
-
-#     # Calculate the similarity between the words "cat" and "dog"
-#     similarity = word_embedding_model.similarity("cat", "dog")
-
-#     # Print the similarity
-#     logging.info(similarity)
-#     print(similarity)
-
-
-# def cosine_similarity(v1, v2):
-#     """Calculates the cosine similarity between two vectors."""
-#     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-
-# def main():
-#     # Create two vectors
-#     v1 = np.array([1, 2, 3])
-#     v2 = np.array([4, 5, 6])
-
-#     # Calculate the cosine similarity between the two vectors
-#     cosine_similarity_value = cosine_similarity(v1, v2)
-
-#     # Print the cosine similarity
-#     logging.info(f"fasdf*************: {cosine_similarity_value}")
-#     print(cosine_similarity)
-
-
 
 class PromptTest(evals.Eval):
     def __init__(self, test_jsonl, **kwargs):
@@ -63,8 +14,6 @@ class PromptTest(evals.Eval):
         self.test_jsonl = test_jsonl
 
     def run(self, recorder):
-        # vec()
-        # main()
         test_samples = evals.get_jsonl(self.test_jsonl)
         self.eval_all_samples(recorder, test_samples)
         # Record overall metrics
