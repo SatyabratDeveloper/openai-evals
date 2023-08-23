@@ -42,13 +42,13 @@ def default_recorder() -> Optional["RecorderBase"]:
 
 @dataclasses.dataclass
 class Event:
-    run_id: str
-    event_id: int
-    sample_id: Optional[str]
+    # run_id: str
+    # event_id: int
+    # sample_id: Optional[str]
     type: str
     data: dict
-    created_by: str
-    created_at: str
+    # created_by: str
+    # created_at: str
 
 
 class RecorderBase:
@@ -152,7 +152,7 @@ class RecorderBase:
             events_to_write = self._events[self._written_events :]
             self._written_events = len(self._events)
             self._flushes_started += 1
-        # self._flush_events_internal(events_to_write)
+        self._flush_events_internal(events_to_write)
 
     def record_event(self, type, data=None, sample_id=None):
         if sample_id is None:
@@ -164,13 +164,13 @@ class RecorderBase:
             return
         with self._event_lock:
             event = Event(
-                run_id=self.run_spec.run_id,
-                event_id=len(self._events),
+                # run_id=self.run_spec.run_id,
+                # event_id=len(self._events),
                 type=type,
-                sample_id=sample_id,
+                # sample_id=sample_id,
                 data=data,
-                created_by=self.run_spec.created_by,
-                created_at=str(datetime.now(timezone.utc)),
+                # created_by=self.run_spec.created_by,
+                # created_at=str(datetime.now(timezone.utc)),
             )
             self._events.append(event)
             if (
@@ -200,7 +200,7 @@ class RecorderBase:
         self.record_event("match", data, sample_id=sample_id)
 
     def record_each_sample_match(self, accuracy):
-        self.record_event("each_sample_match", data=accuracy)
+        self.record_event("Tags Result", data=accuracy)
 
     def record_embedding(self, prompt, embedding_type, sample_id=None, **extra):
         data = {
@@ -216,7 +216,7 @@ class RecorderBase:
             "sampled": sampled,
             **extra,
         }
-        # self.record_event("sampling", data, sample_id=sample_id)
+        self.record_event("sampling", data, sample_id=sample_id)
 
     def record_cond_logp(self, prompt, completion, logp, sample_id=None, **extra):
         data = {
@@ -316,9 +316,9 @@ class LocalRecorder(RecorderBase):
     def __init__(self, log_path: Optional[str], run_spec: RunSpec):
         super().__init__(run_spec)
         self.event_file_path = log_path
-        # if log_path is not None:
-        #     with bf.BlobFile(log_path, "wb") as f:
-        #         f.write((jsondumps({"spec": dataclasses.asdict(run_spec)}) + "\n").encode("utf-8"))
+        if log_path is not None:
+            with bf.BlobFile(log_path, "wb") as f:
+                f.write((jsondumps({"spec": dataclasses.asdict(run_spec)}) + "\n").encode("utf-8"))
 
     def _flush_events_internal(self, events_to_write: Sequence[Event]):
         start = time.time()
@@ -328,8 +328,8 @@ class LocalRecorder(RecorderBase):
             logger.error(f"Failed to serialize events: {events_to_write}")
             raise e
 
-        # with bf.BlobFile(self.event_file_path, "ab") as f:
-        #     f.write(b"".join([l.encode("utf-8") for l in lines]))
+        with bf.BlobFile(self.event_file_path, "ab") as f:
+            f.write(b"".join([l.encode("utf-8") for l in lines]))
 
         logger.info(
             f"Logged {len(lines)} rows of events to {self.event_file_path}: insert_time={t(time.time()-start)}"
@@ -339,8 +339,8 @@ class LocalRecorder(RecorderBase):
         self._flushes_done += 1
 
     def record_final_report(self, final_report: Any):
-        # with bf.BlobFile(self.event_file_path, "ab") as f:
-        #     f.write((jsondumps({"final_report": final_report}) + "\n").encode("utf-8"))
+        with bf.BlobFile(self.event_file_path, "ab") as f:
+            f.write((jsondumps({"final_report": final_report}) + "\n").encode("utf-8"))
 
         logging.info(f"Final report: {final_report}. Logged to {self.event_file_path}")
 

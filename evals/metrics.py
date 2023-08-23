@@ -3,11 +3,23 @@ This file defines various common metrics of interest.
 """
 import random
 from typing import Optional, Sequence, Set
-
 import numpy as np
-import logging
-
+import json
 from evals.record import Event
+
+# Import the ModelEmbeddings class from the misc module
+from string2string.misc import ModelEmbeddings
+
+# Import the CosineSimilarity class from the similarity module
+from string2string.similarity import CosineSimilarity
+
+# Create an instance of the ModelEmbeddings class (if device is not specified, it will be automatically detected)
+bart_model = ModelEmbeddings(
+    model_name_or_path='facebook/bart-large'
+)
+
+# Create an instance of the CosineSimilarity class
+cosine_similarity = CosineSimilarity()
 
 
 def get_accuracy(events: Sequence[Event]) -> float:
@@ -32,6 +44,8 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
     level_2_result = False
     level_3_result = False
 
+    correct_level_1 = False
+
     output_list = list(subject_tags.values())
     expected_list = list(expected_subject_tags.values())
 
@@ -44,7 +58,7 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
             expected_level_1 = expected_value[0]
         if expected_index == 1:
             expected_level_2 = expected_value[0]
-        else:
+        if expected_index == 2:
             expected_level_3 = expected_value
         
         for output_index, output_value in enumerate(output_list):
@@ -52,13 +66,13 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
                 level_1 = output_value
             if output_index == 1:
                 level_2 = output_value
-            else:
+            if output_index == 2:
                 level_3 = output_value
             
             if expected_index == 0 or expected_index == 1:
                 if expected_value[0] == output_value:
                     matched_level_list.append(output_index)
-            else:
+            if expected_index == 2:
                 if output_value in expected_value:
                     matched_level_list.append(output_index)
 
@@ -69,25 +83,34 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
             inverted_value = 'Inverted Output'
             break
 
-    logging.info(f"inverted_value:{inverted_value}")
-
     # Subject Comparison
     if inverted_value != 'Inverted Output':
-        if expected_level_1 == level_1 or expected_level_1 == level_2 or expected_level_1 == level_3:
+        if expected_level_1 == level_1:
+            correct_level_1 = True
             level_1_result = True
-            subject_accuracy += 50 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else (100 if expected_arr_length == 1 else 33))
-        if expected_level_2 == level_1 or expected_level_2 == level_2 or expected_level_2 == level_3:
+            subject_accuracy += 50 if expected_arr_length == 3 else (60 if expected_arr_length == 2 else 100)
+        if expected_level_2 == level_2 or expected_level_2 == level_3:
             level_2_result = True
-            subject_accuracy += 30 if expected_arr_length == 3 and expected_arr_length == output_arr_length else (50 if expected_arr_length == 2 else 33)
-        if level_1 in expected_level_3 or level_2 in expected_level_3 or level_3 in expected_level_3:
+            subject_accuracy += 20 if expected_arr_length == 3 else 40
+        elif expected_level_2:
+            result = similarity_checker([expected_level_2, level_2, level_3])
+            if result == True:
+                level_2_result = True
+                subject_accuracy += 20 if expected_arr_length == 3 else 40
+        if level_2 in expected_level_3 or level_3 in expected_level_3:
             level_3_result = True
-            subject_accuracy += 20 if expected_arr_length == 3 and expected_arr_length else 33
+            subject_accuracy += 30
+        elif expected_level_3:
+            result = similarity_checker(expected_level_3 + [level_2, level_3])
+            if result == True:
+                level_1_result = True
+                subject_accuracy += 50 if expected_arr_length == 3 else (60 if expected_arr_length == 2 else 100)
+    else:
+        if expected_level_1 == level_1:
+            level_1_result = True
+            subject_accuracy += 50
     
-    print(f"Subject Tag Level 1: {level_1} === Expected Subject Tag--> Level 1: {expected_level_1}, {level_1_result}")
-    print(f"Subject Tag Level 2: {level_2} === Expected Subject Tag--> Level 2: {expected_level_2}, {level_2_result}")
-    print(f"Subject Tag Level 3: {level_3} === Expected Subject Tag--> Level 3: {expected_level_3}, {level_3_result}")
-    
-    return subject_accuracy
+    return {"subject_accuracy": subject_accuracy, "correct_level_1": correct_level_1}
 
 def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
     skill_accuracy = 0
@@ -96,62 +119,111 @@ def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
     correct_tags = len(set(skill_tags) & set(expected_skill_tags))
 
     # Skill Tags Comparison
-    print("Output Skill Tags -->", skill_tags)
-    print("Expected Skill Tags -->", expected_skill_tags)
-    print("Correct Skill Tags", correct_tags)
-
-    if correct_tags == 0:
-        skill_accuracy += 0
-    elif correct_tags == 1 and expected_skill_tags_length == 2:
-        skill_accuracy += 50
-    elif correct_tags == 1 and expected_skill_tags_length == 3:
-        skill_accuracy += 33
-    elif correct_tags == 2 and expected_skill_tags_length == 3:
-        skill_accuracy += 66
-    elif correct_tags == expected_skill_tags_length:
-        skill_accuracy += 100
-
-    # skill_accuracy = (correct_tags / expected_skill_tags) * 100
+    skill_accuracy = (correct_tags / expected_skill_tags_length) * 100
 
     return skill_accuracy
 
-def get_each_sample_accuracy(sampled, expected) -> float:
-    print("======================================================")
-    test_accuracy = 0
+def get_lowercase_dictionary(response, expected):
+    # Convert the JSON string to a Python dictionary
+    response_dict = json.loads(response.replace("'", "\""))
+
+    # Lowercase dictionary while handling None values
+    response_lowercase_dict = {
+        key.lower(): value.lower() if value is not None and isinstance(value, str) else (
+            [item.lower() for item in value] if isinstance(value, list) and all(isinstance(item, str) for item in value) else value
+        )
+        for key, value in response_dict.items()
+    }
+
+    expected_lowercase_dict = {
+        key.lower(): value.lower() if value is not None and isinstance(value, str) else (
+            [item.lower() for item in value] if isinstance(value, list) and all(isinstance(item, str) for item in value) else value
+        )
+        for key, value in expected.items()
+    }
+
+    return response_lowercase_dict, expected_lowercase_dict
+
+def get_subject_and_skill_tags(response_dict, expected_dict):
     subject_tags = {}
     skill_tags = []
     expected_subject_tags = {}
     expected_skill_tags = []
 
-    for key, value in sampled.items():
+    # Loop to split response subject and skill tags
+    for key, value in response_dict.items():
         if key.startswith('level'):
             subject_tags[key] = value
         elif key == 'skills':
             skill_tags = value
-
-    for key, value in expected.items():
+    # Loop to split expected subject and skill tags
+    for key, value in expected_dict.items():
         if key.startswith('level'):
             expected_subject_tags[key] = value
         elif key == 'skills':
             expected_skill_tags = value
     
+    return subject_tags, skill_tags, expected_subject_tags, expected_skill_tags
+
+def get_each_sample_accuracy(response, expected) -> float:
+    test_accuracy = 0
+
+    # To get lowercase response and expected
+    response_dict, expected_dict = get_lowercase_dictionary(response, expected)
+
+    # To split subject and skill tags
+    subject_tags, skill_tags, expected_subject_tags, expected_skill_tags = get_subject_and_skill_tags(response_dict, expected_dict)
+
+    # To get subject and skill accuracy
     subject_accuracy = get_subject_tags_accuracy(subject_tags, expected_subject_tags)
     skill_accuracy = get_skill_tags_accuracy(skill_tags, expected_skill_tags)
 
-    test_accuracy = (subject_accuracy + skill_accuracy) / 2
+    # To get test accuracy and set threshold
+    test_accuracy = (subject_accuracy["subject_accuracy"] + skill_accuracy) / 2
     test_pass = test_accuracy >= 75
     
     # Logs
-    print("Subject Tags Accuracy", subject_accuracy)
+    print("======================================================")
+    print("Subject tag output", subject_tags)
+    print("Subject tag expected", expected_subject_tags)
+    print("Skill tag output", skill_tags)
+    print("Skill tag expected", expected_skill_tags)
+    print("******************************************************")
+    print("Subject Tags Accuracy", subject_accuracy["subject_accuracy"])
     print("Skill Tags Accuracy", skill_accuracy)
     print("Test Accuracy", test_accuracy)
+    print("Test pass", test_accuracy)
     print("======================================================")
     
     return {
         'pass': test_pass,
-        'score': test_accuracy / 100,
+        'subject_tags_score': subject_accuracy["subject_accuracy"],
+        'skill_tags_score': skill_accuracy,
+        'combined_tag_score': test_accuracy,
+        'correct_level_1': subject_accuracy["correct_level_1"],
         'reason': 'output matched' if test_pass else 'Output did not matched',
     }
+
+
+def similarity_checker(sentences):
+    similarity_result = False
+    embeds = []
+
+    # Compute the sentence embeddings for each sentence
+    for sentence in sentences:
+        embedding = bart_model.get_embeddings(sentence, embedding_type='mean_pooling')
+        embeds.append(embedding)
+
+    # Compute the cosine similarity between each pair of embeddings
+    for i in range(1):
+        for j in range(i + 1, len(embeds)):
+            result = cosine_similarity.compute(embeds[i], embeds[j], dim=1).item()
+            # print(f'The cosine similarity between the BART embeddings of Expeected Level: {sentences[i]} and Output Level: {sentences[j]} is {result:.2f}')
+            if result >= 0.82:
+                similarity_result = True
+                return similarity_result
+    return similarity_result
+
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
     vals = [m.data["correct"] for m in events]
