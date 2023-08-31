@@ -4,6 +4,9 @@ evals.egg-info/
 .venv/
 venv/
 
+.myenv/
+myenv
+
 # MacOS folder metadata
 .DS_Store
 .vscode/

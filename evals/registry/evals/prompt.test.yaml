@@ -1,0 +1,19 @@
+# Define a base eval
+prompt_test:
+  # id specifies the eval that this eval is an alias for
+  # When you run `oaieval gpt-3.5-turbo prompt_test`, you are actually running `oaieval gpt-3.5-turbo prompt_test.dev.match-v1`
+  id: prompt_test.dev.match-v1
+
+  # The metrics that this eval records
+  # The first metric will be considered to be the primary metric
+  metrics: [accuracy]
+  description: Evaluate prompt accuracy
+
+# Define the eval
+prompt_test.dev.match-v1:
+  # Specify the class name as a dotted path to the module and class
+  class: evals.elsuite.prompt_test:PromptTest
+  # Specify the arguments as a dictionary of JSONL URIs
+  # These arguments can be anything that you want to pass to the class constructor
+  args:
+    test_jsonl: prompt_test/prompt.jsonl

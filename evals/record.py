@@ -42,13 +42,13 @@ def default_recorder() -> Optional["RecorderBase"]:
 
 @dataclasses.dataclass
 class Event:
-    run_id: str
-    event_id: int
-    sample_id: Optional[str]
+    # run_id: str
+    # event_id: int
+    # sample_id: Optional[str]
     type: str
     data: dict
-    created_by: str
-    created_at: str
+    # created_by: str
+    # created_at: str
 
 
 class RecorderBase:
@@ -164,13 +164,13 @@ class RecorderBase:
             return
         with self._event_lock:
             event = Event(
-                run_id=self.run_spec.run_id,
-                event_id=len(self._events),
+                # run_id=self.run_spec.run_id,
+                # event_id=len(self._events),
                 type=type,
-                sample_id=sample_id,
+                # sample_id=sample_id,
                 data=data,
-                created_by=self.run_spec.created_by,
-                created_at=str(datetime.now(timezone.utc)),
+                # created_by=self.run_spec.created_by,
+                # created_at=str(datetime.now(timezone.utc)),
             )
             self._events.append(event)
             if (
@@ -198,6 +198,9 @@ class RecorderBase:
             **extra,
         }
         self.record_event("match", data, sample_id=sample_id)
+
+    def record_each_sample_match(self, accuracy):
+        self.record_event("Tags Result", data=accuracy)
 
     def record_embedding(self, prompt, embedding_type, sample_id=None, **extra):
         data = {
@@ -564,6 +567,8 @@ def current_sample_id() -> str:
 def record_match(correct: bool, *, expected=None, picked=None, **extra):
     return default_recorder().record_match(correct, expected=expected, picked=picked, **extra)
 
+def record_each_sample_match(accuracy):
+    return default_recorder().record_each_sample_match(accuracy)
 
 def record_embedding(prompt, embedding_type, **extra):
     return default_recorder().record_embedding(prompt, embedding_type, **extra)
