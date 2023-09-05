@@ -30,7 +30,7 @@ def get_accuracy(events: Sequence[Event]) -> float:
     else:
         return num_correct / num_total
     
-def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
+def get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input) -> float:
     subject_accuracy = 0
     inverted_value = 0
     matched_level_list = []
@@ -40,16 +40,13 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
     expected_level_1 = ''
     expected_level_2 = ''
     expected_level_3 = []
-    level_1_result = False
-    level_2_result = False
-    level_3_result = False
 
     correct_level_1 = False
 
     output_list = list(subject_tags.values())
     expected_list = list(expected_subject_tags.values())
 
-    output_arr_length = len(output_list)
+    # output_arr_length = len(output_list)
     expected_arr_length = len(expected_list)
 
     # loop to find inverted tags and assigning the levels values
@@ -87,28 +84,34 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags) -> float:
     if inverted_value != 'Inverted Output':
         if expected_level_1 == level_1:
             correct_level_1 = True
-            level_1_result = True
             subject_accuracy += 50 if expected_arr_length == 3 else (60 if expected_arr_length == 2 else 100)
+        else:
+            with open('incorrect.txt', 'a') as file:
+                file.write(f"Question: {user_input['content']}\n\nExpected: Level 1: {expected_level_1}, Level 2: {expected_level_2}, Level 3: {expected_level_3}\nOutput: Level 1: {level_1}, Level 2: {level_2}, Level 3: {level_3}\n\n")
         if expected_level_2 == level_2 or expected_level_2 == level_3:
-            level_2_result = True
             subject_accuracy += 20 if expected_arr_length == 3 else 40
         elif expected_level_2:
-            result = similarity_checker([expected_level_2, level_2, level_3])
+            similarity_input = [expected_level_2, level_2, level_3]
+            if None in similarity_input:
+                similarity_input = [item for item in similarity_input if item is not None]
+            result = similarity_checker(similarity_input)
             if result == True:
-                level_2_result = True
                 subject_accuracy += 20 if expected_arr_length == 3 else 40
         if level_2 in expected_level_3 or level_3 in expected_level_3:
-            level_3_result = True
             subject_accuracy += 30
         elif expected_level_3:
-            result = similarity_checker(expected_level_3 + [level_2, level_3])
+            similarity_input = expected_level_3 + [level_2, level_3]
+            if None in similarity_input:
+                similarity_input = [item for item in similarity_input if item is not None]
+            result = similarity_checker(similarity_input)
             if result == True:
-                level_1_result = True
-                subject_accuracy += 50 if expected_arr_length == 3 else (60 if expected_arr_length == 2 else 100)
+                subject_accuracy += 30
     else:
         if expected_level_1 == level_1:
-            level_1_result = True
-            subject_accuracy += 50
+            subject_accuracy += 50 if expected_arr_length == 3 else 60
+        else:
+            with open('incorrect.txt', 'a') as file:
+                file.write(f"{user_input}\n\nExpected: Level 1: {expected_level_1}, Level 2: {expected_level_2}, Level 3: {expected_level_3}\nOutput: Level 1: {level_1}, Level 2: {level_2}, Level 3: {level_3}\n\n")
     
     return {"subject_accuracy": subject_accuracy, "correct_level_1": correct_level_1}
 
@@ -125,7 +128,13 @@ def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
 
 def get_lowercase_dictionary(response, expected):
     # Convert the JSON string to a Python dictionary
-    response_dict = json.loads(response.replace("'", "\""))
+    print("response", response)
+    response_dict = json.loads(response)
+
+    # Replace None with an empty string in the data dictionary
+    for key, value in response_dict.items():
+        if value is None:
+            response_dict[key] = ""
 
     # Lowercase dictionary while handling None values
     response_lowercase_dict = {
@@ -165,7 +174,7 @@ def get_subject_and_skill_tags(response_dict, expected_dict):
     
     return subject_tags, skill_tags, expected_subject_tags, expected_skill_tags
 
-def get_each_sample_accuracy(response, expected) -> float:
+def get_each_sample_accuracy(response, expected, user_input) -> float:
     test_accuracy = 0
 
     # To get lowercase response and expected
@@ -175,12 +184,25 @@ def get_each_sample_accuracy(response, expected) -> float:
     subject_tags, skill_tags, expected_subject_tags, expected_skill_tags = get_subject_and_skill_tags(response_dict, expected_dict)
 
     # To get subject and skill accuracy
-    subject_accuracy = get_subject_tags_accuracy(subject_tags, expected_subject_tags)
+    subject_accuracy = get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input)
     skill_accuracy = get_skill_tags_accuracy(skill_tags, expected_skill_tags)
 
     # To get test accuracy and set threshold
     test_accuracy = (subject_accuracy["subject_accuracy"] + skill_accuracy) / 2
     test_pass = test_accuracy >= 75
+
+    with open('evals_output.txt', 'a') as file:
+        file.write(f"======================================================\n")
+        file.write(f"Subject tag output: {subject_tags}\n")
+        file.write(f"Subject tag expected: {expected_subject_tags}\n")
+        file.write(f"Skill tag output: {skill_tags}\n")
+        file.write(f"Skill tag expected: {expected_skill_tags}\n")
+        file.write(f"******************************************************\n")
+        file.write(f"Subject Tags Accuracy: {subject_accuracy['subject_accuracy']}\n")
+        file.write(f"Skill Tags Accuracy: {skill_accuracy}\n")
+        file.write(f"Test Accuracy: {test_accuracy}\n")
+        file.write(f"Test pass: {test_accuracy}\n")
+        file.write(f"======================================================\n\n")
     
     # Logs
     print("======================================================")
