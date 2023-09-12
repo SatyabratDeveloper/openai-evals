@@ -237,9 +237,9 @@ def run(args: OaiEvalArguments, registry: Optional[Registry] = None) -> str:
         logger.info(_purple(f"Run completed: {run_url}"))
 
     logger.info("Final report:")
-    for key, value in result.items():
-        logger.info(f"{key}: {value}")
-    return run_spec.run_id
+    # for key, value in result.items():
+    #     logger.info(f"{key}: {value}")
+    # return run_spec.run_id
 
 
 def main() -> None:
