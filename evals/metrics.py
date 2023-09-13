@@ -5,6 +5,7 @@ import random
 from typing import Optional, Sequence, Set
 import numpy as np
 import math
+import re
 import json
 from evals.record import Event
 
@@ -231,25 +232,24 @@ def get_subject_and_skill_tags(response_dict, expected_dict):
 #     return similarity_result
 
 def similarity(str1, str2):
-
-    stopWords = [
-        "usually", "us", "upon", "until", "under", "use", "relate", "related", "relatively",
-        "regarding", "quite", "n", "necessary", "to", "than", "that", "those", "this", "there",
-        "three", "o", "of", "one", "or", "on", "a", "after", "an", "any", "and", "are", "accordingly",
-        "among", "all", "as", "vs", "v", "via", "very", "versus", "k", "g", "go", "b", "by", "both",
-        "but", "be", "because", "between", "h", "how", "w", "was", "why", "what", "when", "where",
-        "while", "whose", "s", "should", "said", "so", "some", "such", "since", "p", "l", "less",
-        "ie", "ifs", "if", "i", "is", "in", "f", "from", "for", "d", "did", "c", "e", "eg"
+    stop_words = [
+        "usually", "us", "upon", "until", "under", "use", "relate", "related", "relatively", "regarding",
+        "quite", "n", "necessary", "to", "based", "than", "that", "those", "this", "there", "three", "o",
+        "of", "one", "or", "on", "a", "after", "an", "any", "and", "are", "accordingly", "among", "all", "as",
+        "vs", "v", "via", "very", "versus", "k", "g", "go", "b", "by", "both", "but", "be", "because",
+        "between", "h", "how", "w", "was", "why", "what", "when", "where", "while", "whose", "s", "should",
+        "said", "so", "some", "such", "since", "p", "l", "less", "ie", "ifs", "if", "i", "is", "in", "f",
+        "from", "for", "d", "did", "c", "e", "eg"
     ]
 
-    def word_count_map(text):
-        words = text.split()
+    def word_count_map(s):
+        words = re.split(r'[ -/,/]', s)
         word_count = {}
-        for word in words:
-            word = word.lower()
-            if word in stopWords:
+        for w in words:
+            w = w.lower()
+            if w in stop_words:
                 continue
-            word_count[word] = word_count.get(word, 0) + 1
+            word_count[w] = word_count.get(w, 0) + 1
         return word_count
 
     def add_words_to_dictionary(word_count_map, dictionary):
@@ -262,40 +262,44 @@ def similarity(str1, str2):
             word_count_vector.append(word_count_map.get(term, 0))
         return word_count_vector
 
-    def dot_product(vecA, vecB):
+    def dot_product(vec_a, vec_b):
         product = 0
-        for i in range(len(vecA)):
-            product += vecA[i] * vecB[i]
+        for i in range(len(vec_a)):
+            product += vec_a[i] * vec_b[i]
         return product
 
     def magnitude(vec):
-        return math.sqrt(sum(x ** 2 for x in vec))
+        sum_sq = sum(x * x for x in vec)
+        return math.sqrt(sum_sq)
 
-    def cosine_similarity(vecA, vecB):
-        dot_prod = dot_product(vecA, vecB)
-        mag_a = magnitude(vecA)
-        mag_b = magnitude(vecB)
-    
+    def cosine_similarity(vec_a, vec_b):
+        dot_prod = dot_product(vec_a, vec_b)
+        mag_a = magnitude(vec_a)
+        mag_b = magnitude(vec_b)
+
         if mag_a == 0 or mag_b == 0:
             return 0  # Return 0 similarity when one of the vectors has zero magnitude
         else:
             return dot_prod / (mag_a * mag_b)
 
-    def text_cosine_similarity(txtA, txtB):
-        word_count_A = word_count_map(txtA)
-        word_count_B = word_count_map(txtB)
+    def text_cosine_similarity(txt_a, txt_b):
+        word_count_a = word_count_map(txt_a)
+        word_count_b = word_count_map(txt_b)
         dictionary = {}
-        add_words_to_dictionary(word_count_A, dictionary)
-        add_words_to_dictionary(word_count_B, dictionary)
-        vectorA = word_map_to_vector(word_count_A, dictionary)
-        vectorB = word_map_to_vector(word_count_B, dictionary)
-        similarity = cosine_similarity(vectorA, vectorB)
+        add_words_to_dictionary(word_count_a, dictionary)
+        add_words_to_dictionary(word_count_b, dictionary)
+        vector_a = word_map_to_vector(word_count_a, dictionary)
+        vector_b = word_map_to_vector(word_count_b, dictionary)
+        similarity = cosine_similarity(vector_a, vector_b)
         return similarity
 
     def get_similarity_score(val):
         return round(val * 100)
 
-    return text_cosine_similarity(str1, str2)
+    similarity_score = text_cosine_similarity(str1, str2)
+    # print(f"Similarity Score: {get_similarity_score(similarity_score)}%")
+
+    return get_similarity_score(similarity_score)
 
 
 
@@ -397,8 +401,10 @@ def get_tag_tree(subject_tags):
     print("max_length_tree", max_length_tree)
 
     node_list = {}
+    last_node = {}
     for max_tree in max_length_tree:
         tree_node = max_tree[len(max_tree) - 1]
+        last_node = data[tree_node]
         for key, value in data.items():
             if 'ancestor' in value:
                 if tree_node in value['ancestor'] and value['children'] == []:
@@ -418,14 +424,36 @@ def get_tag_tree(subject_tags):
         for item in value['ancestor']:
             name = data[item]['name']
             height = data[item]['height']
-            if height > value['height']:
+            if height >= last_node['height']:
                 ancestor_list.append({'name': name, 'height': height})
+        ancestor_list.append({'name': value['name'], 'height': value['height']})
         ancestors_list.append(ancestor_list)
 
-    print("ancestors_list", ancestors_list)
+    sorted_ancestors_list = [sorted(array, key=lambda x: x['height']) for array in ancestors_list]
 
-    with open("ancestors_list.json", "a") as json_file:
-        json.dump(ancestors_list, json_file)
+    print("sorted_ancestors_list", sorted_ancestors_list)
+
+    with open("sorted_ancestors_list.json", "a") as json_file:
+        json.dump(sorted_ancestors_list, json_file)
+
+    nested_object = {}
+
+    for item in sorted_ancestors_list:
+        current_level = nested_object  # Start at the root level
+    
+        for entry in item:
+            name, height = entry["name"], entry["height"]
+    
+            if name not in current_level:
+                current_level[name] = {}  # Create a new level if it doesn't exist
+    
+            current_level = current_level[name]  # Move to the next level
+    
+    print(json.dumps(nested_object, indent=2))
+    with open("nested_object.json", "a") as json_file:
+        json.dump(nested_object, json_file)
+
+    return nested_object
 
 
 def get_prompt_tree(response):
