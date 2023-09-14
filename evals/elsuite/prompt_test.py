@@ -29,9 +29,9 @@ class PromptTest(evals.Eval):
         response = result.get_completions()[0]
         # expected = test_sample["ideal"]
 
-        response_sample = '{"Level 1": "Numerical Aptitude", "Level 2": "Mensuration", "Level 3": "2D Figures"}'
+        response_sample = '{"Level 1": "Numerical Aptitude", "Level 2": "Mensuration", "Level 3": "2D-Figures"}'
 
-        prompt_2_tree = evals.metrics.get_prompt_tree(response_sample)
+        tag_tree = evals.metrics.get_tag_tree(response_sample)
 
-        #"Numerical Aptitude	Mensuration	Planes	2D Figures	Circle"
+        print("tag_tree", tag_tree)
         

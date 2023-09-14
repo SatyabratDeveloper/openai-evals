@@ -7,6 +7,7 @@ import numpy as np
 import math
 import re
 import json
+import sys
 from evals.record import Event
 
 # Import the ModelEmbeddings class from the misc module
@@ -31,102 +32,23 @@ def get_accuracy(events: Sequence[Event]) -> float:
         return float("nan")
     else:
         return num_correct / num_total
+
+def get_size(obj, seen=None):
+    """Recursively finds the size of a nested object."""
+    if seen is None:
+        seen = set()
+    size = sys.getsizeof(obj)
+    if id(obj) in seen:
+        return 0
+    seen.add(id(obj))
+    if isinstance(obj, dict):
+        size += sum(get_size(key, seen) + get_size(value, seen) for key, value in obj.items())
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+        size += sum(get_size(item, seen) for item in obj)
+    return size
     
-# def get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input) -> float:
-#     subject_accuracy = 0
-#     inverted_value = 0
-#     matched_level_list = []
-#     level_1 = ''
-#     level_2 = ''
-#     level_3 = ''
-#     expected_level_1 = ''
-#     expected_level_2 = ''
-#     expected_level_3 = []
-
-#     correct_level_1 = False
-
-#     output_list = list(subject_tags.values())
-#     expected_list = list(expected_subject_tags.values())
-
-#     # output_arr_length = len(output_list)
-#     expected_arr_length = len(expected_list)
-
-#     # loop to find inverted tags and assigning the levels values
-#     for expected_index, expected_value in enumerate(expected_list):
-#         if expected_index == 0:
-#             expected_level_1 = expected_value[0]
-#         if expected_index == 1:
-#             expected_level_2 = expected_value[0]
-#         if expected_index == 2:
-#             expected_level_3 = expected_value
-        
-#         for output_index, output_value in enumerate(output_list):
-#             if output_index == 0:
-#                 level_1 = output_value
-#             if output_index == 1:
-#                 level_2 = output_value
-#             if output_index == 2:
-#                 level_3 = output_value
-            
-#             if expected_index == 0 or expected_index == 1:
-#                 if expected_value[0] == output_value:
-#                     matched_level_list.append(output_index)
-#             if expected_index == 2:
-#                 if output_value in expected_value:
-#                     matched_level_list.append(output_index)
-
-#     for element in matched_level_list:
-#         if element >= inverted_value:
-#             inverted_value = element
-#         else:
-#             inverted_value = 'Inverted Output'
-#             break
-
-#     # Subject Comparison
-#     if inverted_value != 'Inverted Output':
-#         if expected_level_1 == level_1:
-#             correct_level_1 = True
-#             subject_accuracy += 50 if expected_arr_length == 3 else (60 if expected_arr_length == 2 else 100)
-#         else:
-#             with open('incorrect.txt', 'a') as file:
-#                 file.write(f"Question: {user_input['content']}\n\nExpected: Level 1: {expected_level_1}, Level 2: {expected_level_2}, Level 3: {expected_level_3}\nOutput: Level 1: {level_1}, Level 2: {level_2}, Level 3: {level_3}\n\n")
-#         if expected_level_2 == level_2 or expected_level_2 == level_3:
-#             subject_accuracy += 20 if expected_arr_length == 3 else 40
-#         elif expected_level_2:
-#             similarity_input = [expected_level_2, level_2, level_3]
-#             if None in similarity_input:
-#                 similarity_input = [item for item in similarity_input if item is not None]
-#             result = similarity_checker(similarity_input)
-#             if result == True:
-#                 subject_accuracy += 20 if expected_arr_length == 3 else 40
-#         if level_2 in expected_level_3 or level_3 in expected_level_3:
-#             subject_accuracy += 30
-#         elif expected_level_3:
-#             similarity_input = expected_level_3 + [level_2, level_3]
-#             if None in similarity_input:
-#                 similarity_input = [item for item in similarity_input if item is not None]
-#             result = similarity_checker(similarity_input)
-#             if result == True:
-#                 subject_accuracy += 30
-#     else:
-#         if expected_level_1 == level_1:
-#             subject_accuracy += 50 if expected_arr_length == 3 else 60
-#         else:
-#             with open('incorrect.txt', 'a') as file:
-#                 file.write(f"{user_input}\n\nExpected: Level 1: {expected_level_1}, Level 2: {expected_level_2}, Level 3: {expected_level_3}\nOutput: Level 1: {level_1}, Level 2: {level_2}, Level 3: {level_3}\n\n")
-    
-#     return {"subject_accuracy": subject_accuracy, "correct_level_1": correct_level_1}
-
-# def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
-#     skill_accuracy = 0
-
-#     expected_skill_tags_length = len(expected_skill_tags)
-#     correct_tags = len(set(skill_tags) & set(expected_skill_tags))
-
-#     # Skill Tags Comparison
-#     skill_accuracy = (correct_tags / expected_skill_tags_length) * 100
-
-#     return skill_accuracy
 
 def get_lowercase_dictionary(response):
     # Convert the JSON string to a Python dictionary
@@ -158,78 +80,7 @@ def get_subject_and_skill_tags(response_dict, expected_dict):
         
     return subject_tags
 
-# def get_each_sample_accuracy(response, expected, user_input) -> float:
-#     test_accuracy = 0
 
-#     # To get lowercase response and expected
-#     response_dict, expected_dict = get_lowercase_dictionary(response, expected)
-
-#     # To split subject and skill tags
-#     subject_tags, expected_subject_tags = get_subject_and_skill_tags(response_dict, expected_dict)
-
-#     # To get subject and skill accuracy
-#     subject_accuracy = get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input)
-#     # skill_accuracy = get_skill_tags_accuracy(skill_tags, expected_skill_tags)
-
-#     # To get test accuracy and set threshold
-#     # test_accuracy = (subject_accuracy["subject_accuracy"] + skill_accuracy) / 2
-#     test_accuracy = subject_accuracy["subject_accuracy"]
-#     test_pass = test_accuracy >= 75
-
-#     with open('evals_output.txt', 'a') as file:
-#         file.write(f"======================================================\n")
-#         file.write(f"Subject tag output: {subject_tags}\n")
-#         file.write(f"Subject tag expected: {expected_subject_tags}\n")
-#         # file.write(f"Skill tag output: {skill_tags}\n")
-#         # file.write(f"Skill tag expected: {expected_skill_tags}\n")
-#         file.write(f"******************************************************\n")
-#         file.write(f"Subject Tags Accuracy: {subject_accuracy['subject_accuracy']}\n")
-#         # file.write(f"Skill Tags Accuracy: {skill_accuracy}\n")
-#         file.write(f"Test Accuracy: {test_accuracy}\n")
-#         file.write(f"Test pass: {test_accuracy}\n")
-#         file.write(f"======================================================\n\n")
-    
-#     # Logs
-#     print("======================================================")
-#     print("Subject tag output", subject_tags)
-#     print("Subject tag expected", expected_subject_tags)
-#     # print("Skill tag output", skill_tags)
-#     # print("Skill tag expected", expected_skill_tags)
-#     print("******************************************************")
-#     print("Subject Tags Accuracy", subject_accuracy["subject_accuracy"])
-#     # print("Skill Tags Accuracy", skill_accuracy)
-#     print("Test Accuracy", test_accuracy)
-#     print("Test pass", test_accuracy)
-#     print("======================================================")
-    
-#     return {
-#         'pass': test_pass,
-#         'subject_tags_score': subject_accuracy["subject_accuracy"],
-#         # 'skill_tags_score': skill_accuracy,
-#         'combined_tag_score': test_accuracy,
-#         'correct_level_1': subject_accuracy["correct_level_1"],
-#         'reason': 'output matched' if test_pass else 'Output did not matched',
-#     }
-
-
-# def similarity_checker(sentences):
-#     similarity_result = False
-#     embeds = []
-
-#     # Compute the sentence embeddings for each sentence
-#     for sentence in sentences:
-#         embedding = bart_model.get_embeddings(sentence, embedding_type='mean_pooling')
-#         embeds.append(embedding)
-
-#     # Compute the cosine similarity between each pair of embeddings
-#     for i in range(1):
-#         for j in range(i + 1, len(embeds)):
-#             result = cosine_similarity.compute(embeds[i], embeds[j], dim=1).item()
-#             # print(f'The cosine similarity between the BART embeddings of Expeected Level: {sentences[i]} and Output Level: {sentences[j]} is {result:.2f}')
-#             if result >= 0.82:
-#                 similarity_result = True
-#                 return similarity_result
-#     return similarity_result
 
 def similarity(str1, str2):
     stop_words = [
@@ -301,27 +152,13 @@ def similarity(str1, str2):
 
     return get_similarity_score(similarity_score)
 
-
-
-def get_tag_tree(subject_tags):
-    # Output
-    level_1, level_2, level_3  = subject_tags.get('level 1', ''), subject_tags.get('level 2', ''), subject_tags.get('level 3', '')
-    # print("level 1", level_1, "level 2", level_2, "level 3", level_3)
-
+def get_parent_child_ids(level_1, level_2, level_3, data):
     parent = ''
     parent_id = ''
-    child_1 = []
     child_1_ids = []
-    child_2 = []
     child_2_ids = []
-    filtered_child_1_ids = []
-    filtered_child_2_ids = []
-    final_tree_id = []
-
-    # Open the JSON file for reading
-    with open('subjectTags.json', 'r') as file:
-        # Parse the JSON data into a Python dictionary
-        data = json.load(file)
+    child_1_ids_similar = []
+    child_2_ids_similar = []
 
     for key, value in data.items():
         id = value.get('id')
@@ -332,13 +169,16 @@ def get_tag_tree(subject_tags):
             parent_id = id
         if level_2 == name:
             child_1_ids.append(id)
+        elif similarity(level_2, name) > 75:
+            child_1_ids_similar.append(id)
         if level_3 == name:
             child_2_ids.append(id)
+        elif similarity(level_3, name) > 75:
+            child_2_ids_similar.append(id)
 
-    print("parent_id", parent_id)
-    print("child_1_ids", child_1_ids)
-    print("child_2_ids", child_2_ids)
-    
+    return parent_id, child_1_ids, child_2_ids, child_1_ids_similar, child_2_ids_similar
+
+def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
     tree_ids = []
 
     if parent_id != '':
@@ -350,6 +190,8 @@ def get_tag_tree(subject_tags):
                             if parent_id in data[child_2_id]['ancestor']:
                                 if child_1_id in data[child_2_id]['ancestor']:
                                     tree_ids.append([parent_id, child_1_id, child_2_id])
+                                elif child_2_id in data[child_1_id]['ancestor']:
+                                    return "Response is inverted"
                                 else:
                                     tree_ids.append([parent_id, child_1_id])
                                     tree_ids.append([parent_id, child_2_id])
@@ -367,6 +209,8 @@ def get_tag_tree(subject_tags):
             for child_2_id in child_2_ids:
                 if parent_id in data[child_2_id]['ancestor']:
                     tree_ids.append([parent_id, child_2_id])
+                else:
+                    tree_ids.append([child_2_id])
         else:
             tree_ids.append([parent_id])
     else:
@@ -376,11 +220,14 @@ def get_tag_tree(subject_tags):
                     for child_2_id in child_2_ids:
                         if child_1_id in data[child_2_id]['ancestor']:
                             tree_ids.append([child_1_id, child_2_id])
-                tree_ids.append([child_1_id])
+                        else:
+                            tree_ids.append([child_1_id])
+                            tree_ids.append([child_2_id])
+                else:
+                    tree_ids.append([child_1_id])
         elif len(child_2_ids) > 0:
             for child_2_id in child_2_ids:
                     tree_ids.append([child_2_id])
-
 
     print("tree_ids", tree_ids)
 
@@ -396,30 +243,35 @@ def get_tag_tree(subject_tags):
     max_length = max(len(sublist) for sublist in unique_tree_ids) if len(unique_tree_ids) > 0 else []
 
     # Collect all sublists with the maximum length
-    max_length_tree = [sublist for sublist in unique_tree_ids if len(sublist) == max_length]    
+    max_length_tree = [sublist for sublist in unique_tree_ids if len(sublist) == max_length]
         
     print("max_length_tree", max_length_tree)
 
-    node_list = {}
-    last_node = {}
-    for max_tree in max_length_tree:
-        tree_node = max_tree[len(max_tree) - 1]
-        last_node = data[tree_node]
+    return max_length_tree
+
+def get_node_list(max_length_trees, data):
+    final_trees = []
+    for max_length_tree in max_length_trees:
+        node_info = {}
+        node_list = {}
+        last_tree_node = max_length_tree[-1]
+        last_node = data[last_tree_node]
         for key, value in data.items():
-            if 'ancestor' in value:
-                if tree_node in value['ancestor'] and value['children'] == []:
-                    node_list[key] = value
+            if 'ancestor' in value and last_tree_node in value['ancestor'] and not value['children']:
+                node_list[key] = value
+        node_info['node_list'] = node_list
+        node_info['last_node'] = last_node
+        final_trees.append(node_info)
 
-    print("node_list", node_list)
+    return final_trees
 
-    with open("node_list.json", "a") as json_file:
-        json.dump(node_list, json_file)
-
-
+def get_nested_object(final_tree, data):
+    node_list = final_tree['node_list']
+    last_node = final_tree['last_node']
+    # print("node_list, last_node", node_list, last_node)
     ancestors_list = []
-
+    # To make the tree structure
     for key, value in node_list.items():
-        print("---------------", value)
         ancestor_list = []
         for item in value['ancestor']:
             name = data[item]['name']
@@ -431,7 +283,7 @@ def get_tag_tree(subject_tags):
 
     sorted_ancestors_list = [sorted(array, key=lambda x: x['height']) for array in ancestors_list]
 
-    print("sorted_ancestors_list", sorted_ancestors_list)
+    # print("sorted_ancestors_list", sorted_ancestors_list)
 
     with open("sorted_ancestors_list.json", "a") as json_file:
         json.dump(sorted_ancestors_list, json_file)
@@ -449,18 +301,86 @@ def get_tag_tree(subject_tags):
     
             current_level = current_level[name]  # Move to the next level
     
-    print(json.dumps(nested_object, indent=2))
+    # print(json.dumps(nested_object, indent=2))
     with open("nested_object.json", "a") as json_file:
         json.dump(nested_object, json_file)
-
+    
     return nested_object
 
+def get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data):
+    nested_object_list = []
 
-def get_prompt_tree(response):
-    # To get lowercase response and expected
-    response_dict = get_lowercase_dictionary(response)
+    # To get the related parent and child
+    max_length_trees = get_related_nodes(parent_id, child_1_ids, child_2_ids, data)
 
-    tag_tree = get_tag_tree(response_dict)
+    max_length_trees_size = len(max_length_trees[0]) > 1
+
+    # if only one Level matched
+    if max_length_trees_size == False:
+        return [{}], max_length_trees
+
+    # To get list of all posible node list (ancestor nodes to make a tree)
+    final_trees = get_node_list(max_length_trees, data)
+    
+    with open("node_list.json", "a") as json_file:
+        json.dump(final_trees, json_file)
+
+    # To get nested object (Tag Tree)
+    for final_tree in final_trees:
+        nested_object = get_nested_object(final_tree, data)
+        nested_object_list.append(nested_object)
+
+    return nested_object_list, max_length_trees
+
+def get_tag_tree(response):
+    # To get response in lowercase
+    subject_tags = get_lowercase_dictionary(response)
+
+    # Levels of Subject Tags
+    level_1, level_2, level_3  = subject_tags.get('level 1', ''), subject_tags.get('level 2', ''), subject_tags.get('level 3', '')
+
+    # Open the JSON file for reading
+    with open('subjectTags.json', 'r') as file:
+        data = json.load(file)
+
+    # get ids of parent and childs
+    parent_id, child_1_ids, child_2_ids, child_1_ids_similar, child_2_ids_similar = get_parent_child_ids(level_1, level_2, level_3, data)
+
+    print("parent_id", parent_id)
+    print("child_1_ids", child_1_ids)
+    print("child_2_ids", child_2_ids)
+    print("child_1_ids_similar", child_1_ids_similar)
+    print("child_2_ids_similar", child_2_ids_similar)
+
+    nested_object_list, max_length_trees = get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data)
+
+
+    correct_levels = []
+    for max_length_tree in max_length_trees:
+        correct_level = []
+        for node in max_length_tree:
+            node_name = (data[node]['name']).lower()
+            if node_name == level_1:
+                correct_level.append("level_1")
+            if node_name == level_2:
+                correct_level.append("level_2")
+            if node_name == level_3:
+                correct_level.append("level_3")
+        correct_levels.append(correct_level)
+            
+
+    print("correct_levels*********=============", correct_levels)
+
+    trees_list = []
+
+    for nested_object, correct_level in zip(nested_object_list, correct_levels):
+        # Size of the tag tree in bytes
+        nested_object_size = get_size(nested_object)
+        print("nested_object_size", nested_object_size)
+        if nested_object_size > 10000:
+            nested_object = get_nested_object_tree(parent_id, child_1_ids, child_2_ids_similar, data)
+
+    return nested_object_list
 
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
