@@ -24,6 +24,7 @@ bart_model = ModelEmbeddings(
 # Create an instance of the CosineSimilarity class
 cosine_similarity = CosineSimilarity()
 
+sorted_ancestors_lists = []
 
 def get_accuracy(events: Sequence[Event]) -> float:
     num_correct = sum(int(event.data["correct"]) for event in events)
@@ -229,23 +230,17 @@ def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
             for child_2_id in child_2_ids:
                     tree_ids.append([child_2_id])
 
-    print("tree_ids", tree_ids)
-
     unique_tree_ids = []
     # To remove the duplicate lists from tree_ids
     for item in tree_ids:
         if item not in unique_tree_ids:
             unique_tree_ids.append(item)
-    
-    print("unique_tree_ids", unique_tree_ids)
 
     # Find the maximum length among the sublists
     max_length = max(len(sublist) for sublist in unique_tree_ids) if len(unique_tree_ids) > 0 else []
 
     # Collect all sublists with the maximum length
     max_length_tree = [sublist for sublist in unique_tree_ids if len(sublist) == max_length]
-        
-    print("max_length_tree", max_length_tree)
 
     return max_length_tree
 
@@ -268,8 +263,8 @@ def get_node_list(max_length_trees, data):
 def get_nested_object(final_tree, data):
     node_list = final_tree['node_list']
     last_node = final_tree['last_node']
-    # print("node_list, last_node", node_list, last_node)
     ancestors_list = []
+    
     # To make the tree structure
     for key, value in node_list.items():
         ancestor_list = []
@@ -281,12 +276,10 @@ def get_nested_object(final_tree, data):
         ancestor_list.append({'name': value['name'], 'height': value['height']})
         ancestors_list.append(ancestor_list)
 
+    # with open("ancestors_list.json", "a") as json_file:
+    #     json.dump(ancestors_list, json_file)
+
     sorted_ancestors_list = [sorted(array, key=lambda x: x['height']) for array in ancestors_list]
-
-    # print("sorted_ancestors_list", sorted_ancestors_list)
-
-    with open("sorted_ancestors_list.json", "a") as json_file:
-        json.dump(sorted_ancestors_list, json_file)
 
     nested_object = {}
 
@@ -301,11 +294,7 @@ def get_nested_object(final_tree, data):
     
             current_level = current_level[name]  # Move to the next level
     
-    # print(json.dumps(nested_object, indent=2))
-    with open("nested_object.json", "a") as json_file:
-        json.dump(nested_object, json_file)
-    
-    return nested_object
+    return nested_object, sorted_ancestors_list
 
 def get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data):
     nested_object_list = []
@@ -322,15 +311,67 @@ def get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data):
     # To get list of all posible node list (ancestor nodes to make a tree)
     final_trees = get_node_list(max_length_trees, data)
     
-    with open("node_list.json", "a") as json_file:
-        json.dump(final_trees, json_file)
+    # with open("node_list.json", "a") as json_file:
+    #     json.dump(final_trees, json_file)
 
     # To get nested object (Tag Tree)
     for final_tree in final_trees:
-        nested_object = get_nested_object(final_tree, data)
+        nested_object, sorted_ancestors_list = get_nested_object(final_tree, data)
         nested_object_list.append(nested_object)
+        sorted_ancestors_lists.append(sorted_ancestors_list)
+    
+    with open("sorted_ancestors_list.json", "a") as json_file:
+        json.dump(sorted_ancestors_lists, json_file)
 
     return nested_object_list, max_length_trees
+
+def get_similarity_check(correct_level, level_2, level_3, parent_id, child_1_ids, child_1_ids_similar, child_2_ids_similar, data):
+        if level_3 not in correct_level:
+            nested_object = get_nested_object_tree(parent_id, child_1_ids, child_2_ids_similar, data)
+        if len(json.dumps(nested_object)) > 3000 and level_2 not in correct_level and level_3 not in correct_level:
+            nested_object = get_nested_object_tree(parent_id, child_1_ids_similar, child_2_ids_similar, data)
+        return nested_object
+
+def get_trimed_tag_tree(sorted_ancestors_list):
+    height_to_remove = 0
+    for ancestor_list in sorted_ancestors_list:
+        for list in ancestor_list:
+            if list["height"] > height_to_remove:
+                height_to_remove = list["height"]
+    for ancestor_list in sorted_ancestors_list:
+        if any(ancestor.get('height') == height_to_remove for ancestor in ancestor_list) and len(ancestor_list) > 1:
+            ancestor_list.pop()
+
+    nested_object = {}
+
+    for item in sorted_ancestors_list:
+        current_level = nested_object  # Start at the root level
+    
+        for entry in item:
+            name, height = entry["name"], entry["height"]
+    
+            if name not in current_level:
+                current_level[name] = {}  # Create a new level if it doesn't exist
+    
+            current_level = current_level[name]  # Move to the next level
+            
+    return nested_object
+
+def get_final_trimed_tag_tree(trees_list):
+    global sorted_ancestors_lists
+    trimed_tag_tree = []
+
+    for sorted_ancestors_list in sorted_ancestors_lists:
+        trimed_tree = get_trimed_tag_tree(sorted_ancestors_list)
+        trimed_tag_tree.append(trimed_tree)
+    
+    if len(json.dumps(trimed_tag_tree)) > 3000:
+        get_final_trimed_tag_tree(trimed_tag_tree)
+
+    # with open("trimed_tag_tree.json", "a") as json_file:
+    #     json.dump(trimed_tag_tree, json_file)
+
+    return trimed_tag_tree
 
 def get_tag_tree(response):
     # To get response in lowercase
@@ -352,10 +393,12 @@ def get_tag_tree(response):
     print("child_1_ids_similar", child_1_ids_similar)
     print("child_2_ids_similar", child_2_ids_similar)
 
+    # nested_object_list - tag tree
+    # max_length_trees - To get correct levels
     nested_object_list, max_length_trees = get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data)
 
-
     correct_levels = []
+    # To get correct levels
     for max_length_tree in max_length_trees:
         correct_level = []
         for node in max_length_tree:
@@ -367,20 +410,34 @@ def get_tag_tree(response):
             if node_name == level_3:
                 correct_level.append("level_3")
         correct_levels.append(correct_level)
-            
-
-    print("correct_levels*********=============", correct_levels)
 
     trees_list = []
 
     for nested_object, correct_level in zip(nested_object_list, correct_levels):
-        # Size of the tag tree in bytes
-        nested_object_size = get_size(nested_object)
-        print("nested_object_size", nested_object_size)
-        if nested_object_size > 10000:
-            nested_object = get_nested_object_tree(parent_id, child_1_ids, child_2_ids_similar, data)
+        # To convert dictionary into string
+        nested_object_string = json.dumps(nested_object)
+        # To get charecter length of nested_object
+        nested_object_size = len(nested_object_string)
+        
+        if nested_object_size > 3000:
+            nested_object_similarity_list = get_similarity_check(correct_level, level_2, level_3, parent_id, child_1_ids, child_1_ids_similar, child_2_ids_similar, data)
+            trees_list.append(nested_object_similarity_list)
+            print("**************similarity******************")
+        else:
+            trees_list.append(nested_object)
 
-    return nested_object_list
+    if len(json.dumps(trees_list)) > 3000:
+        final_trimed_tag_tree = get_final_trimed_tag_tree(trees_list)
+    else:
+        final_trimed_tag_tree = trees_list
+
+    final_tag_tree = []
+
+    for tag_tree in final_trimed_tag_tree:
+        if len(json.dumps(tag_tree)) > 2:
+            final_tag_tree.append(tag_tree)
+
+    return final_tag_tree
 
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
