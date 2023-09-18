@@ -115,20 +115,11 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input) -
     
     return {"subject_accuracy": subject_accuracy, "correct_level_1": correct_level_1}
 
-def get_skill_tags_accuracy(skill_tags, expected_skill_tags) -> float:
-    skill_accuracy = 0
-
-    expected_skill_tags_length = len(expected_skill_tags)
-    correct_tags = len(set(skill_tags) & set(expected_skill_tags))
-
-    # Skill Tags Comparison
-    skill_accuracy = (correct_tags / expected_skill_tags_length) * 100
-
-    return skill_accuracy
-
 def get_lowercase_dictionary(response, expected):
     # Convert the JSON string to a Python dictionary
     print("response", response)
+    if '.' in response:
+        response = response.replace('.', '')
     response_dict = json.loads(response)
 
     # Replace None with an empty string in the data dictionary
@@ -155,24 +146,18 @@ def get_lowercase_dictionary(response, expected):
 
 def get_subject_and_skill_tags(response_dict, expected_dict):
     subject_tags = {}
-    skill_tags = []
     expected_subject_tags = {}
-    expected_skill_tags = []
 
     # Loop to split response subject and skill tags
     for key, value in response_dict.items():
         if key.startswith('level'):
             subject_tags[key] = value
-        elif key == 'skills':
-            skill_tags = value
     # Loop to split expected subject and skill tags
     for key, value in expected_dict.items():
         if key.startswith('level'):
             expected_subject_tags[key] = value
-        elif key == 'skills':
-            expected_skill_tags = value
     
-    return subject_tags, skill_tags, expected_subject_tags, expected_skill_tags
+    return subject_tags, expected_subject_tags
 
 def get_each_sample_accuracy(response, expected, user_input) -> float:
     test_accuracy = 0
@@ -181,25 +166,21 @@ def get_each_sample_accuracy(response, expected, user_input) -> float:
     response_dict, expected_dict = get_lowercase_dictionary(response, expected)
 
     # To split subject and skill tags
-    subject_tags, skill_tags, expected_subject_tags, expected_skill_tags = get_subject_and_skill_tags(response_dict, expected_dict)
+    subject_tags, expected_subject_tags = get_subject_and_skill_tags(response_dict, expected_dict)
 
     # To get subject and skill accuracy
     subject_accuracy = get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input)
-    skill_accuracy = get_skill_tags_accuracy(skill_tags, expected_skill_tags)
 
     # To get test accuracy and set threshold
-    test_accuracy = (subject_accuracy["subject_accuracy"] + skill_accuracy) / 2
+    test_accuracy = subject_accuracy["subject_accuracy"]
     test_pass = test_accuracy >= 75
 
     with open('evals_output.txt', 'a') as file:
         file.write(f"======================================================\n")
         file.write(f"Subject tag output: {subject_tags}\n")
         file.write(f"Subject tag expected: {expected_subject_tags}\n")
-        file.write(f"Skill tag output: {skill_tags}\n")
-        file.write(f"Skill tag expected: {expected_skill_tags}\n")
         file.write(f"******************************************************\n")
         file.write(f"Subject Tags Accuracy: {subject_accuracy['subject_accuracy']}\n")
-        file.write(f"Skill Tags Accuracy: {skill_accuracy}\n")
         file.write(f"Test Accuracy: {test_accuracy}\n")
         file.write(f"Test pass: {test_accuracy}\n")
         file.write(f"======================================================\n\n")
@@ -208,11 +189,8 @@ def get_each_sample_accuracy(response, expected, user_input) -> float:
     print("======================================================")
     print("Subject tag output", subject_tags)
     print("Subject tag expected", expected_subject_tags)
-    print("Skill tag output", skill_tags)
-    print("Skill tag expected", expected_skill_tags)
     print("******************************************************")
     print("Subject Tags Accuracy", subject_accuracy["subject_accuracy"])
-    print("Skill Tags Accuracy", skill_accuracy)
     print("Test Accuracy", test_accuracy)
     print("Test pass", test_accuracy)
     print("======================================================")
@@ -220,7 +198,6 @@ def get_each_sample_accuracy(response, expected, user_input) -> float:
     return {
         'pass': test_pass,
         'subject_tags_score': subject_accuracy["subject_accuracy"],
-        'skill_tags_score': skill_accuracy,
         'combined_tag_score': test_accuracy,
         'correct_level_1': subject_accuracy["correct_level_1"],
         'reason': 'output matched' if test_pass else 'Output did not matched',
