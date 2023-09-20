@@ -171,7 +171,6 @@ def get_parent_child_ids(level_1, level_2, level_3, data):
         if level_2 == name:
             child_1_ids.append(id)
         elif level_2 and similarity(level_2, name) > 75:
-            print(level_2, name)
             child_1_ids_similar.append(id)
         if level_3 == name:
             child_2_ids.append(id)
@@ -188,31 +187,33 @@ def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
             for child_1_id in child_1_ids:
                 if len(child_2_ids) > 0:
                     for child_2_id in child_2_ids:
-                        if parent_id in data[child_1_id]['ancestor']:
-                            if parent_id in data[child_2_id]['ancestor']:
-                                if child_1_id in data[child_2_id]['ancestor']:
-                                    tree_ids.append([parent_id, child_1_id, child_2_id])
-                                elif child_2_id in data[child_1_id]['ancestor']:
-                                    return "Response is inverted"
-                                else:
-                                    tree_ids.append([parent_id, child_1_id])
-                                    tree_ids.append([parent_id, child_2_id])
+                        if 'ancestor' in data[child_1_id]:
+                            if parent_id in data[child_1_id]['ancestor']:
+                                if 'ancestor' in data[child_1_id]:
+                                    if parent_id in data[child_2_id]['ancestor']:
+                                        if 'ancestor' in data[child_1_id]:
+                                            if child_1_id in data[child_2_id]['ancestor']:
+                                                tree_ids.append([parent_id, child_1_id, child_2_id])
+                                            else:
+                                                tree_ids.append([parent_id, child_1_id])
+                                                tree_ids.append([parent_id, child_2_id])
+                                    else:
+                                        tree_ids.append([parent_id, child_1_id])
+                            elif 'ancestor' in data[child_1_id] and parent_id in data[child_2_id]['ancestor']:
+                                tree_ids.append([parent_id, child_2_id])
                             else:
-                                tree_ids.append([parent_id, child_1_id])
-                        elif parent_id in data[child_2_id]['ancestor']:
-                            tree_ids.append([parent_id, child_2_id])
-                        else:
-                            tree_ids.append([parent_id])
-                elif parent_id in data[child_1_id]['ancestor']:
+                                tree_ids.append([parent_id])
+                elif 'ancestor' in data[child_1_id] and parent_id in data[child_1_id]['ancestor']:
                     tree_ids.append([parent_id, child_1_id])
                 else:
                     tree_ids.append([child_1_id])
         elif len(child_2_ids) > 0:
             for child_2_id in child_2_ids:
-                if parent_id in data[child_2_id]['ancestor']:
-                    tree_ids.append([parent_id, child_2_id])
-                else:
-                    tree_ids.append([child_2_id])
+                if 'ancestor' in data[child_1_id]:
+                    if parent_id in data[child_2_id]['ancestor']:
+                        tree_ids.append([parent_id, child_2_id])
+                    else:
+                        tree_ids.append([child_2_id])
         else:
             tree_ids.append([parent_id])
     else:
@@ -220,11 +221,12 @@ def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
             for child_1_id in child_1_ids:
                 if len(child_2_ids) > 0:
                     for child_2_id in child_2_ids:
-                        if child_1_id in data[child_2_id]['ancestor']:
-                            tree_ids.append([child_1_id, child_2_id])
-                        else:
-                            tree_ids.append([child_1_id])
-                            tree_ids.append([child_2_id])
+                        if 'ancestor' in data[child_1_id]:
+                            if child_1_id in data[child_2_id]['ancestor']:
+                                tree_ids.append([child_1_id, child_2_id])
+                            else:
+                                tree_ids.append([child_1_id])
+                                tree_ids.append([child_2_id])
                 else:
                     tree_ids.append([child_1_id])
         elif len(child_2_ids) > 0:
@@ -305,7 +307,7 @@ def get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data):
 
     # To get the related parent and child
     max_length_trees = get_related_nodes(parent_id, child_1_ids, child_2_ids, data)
-    print("max_length_trees", max_length_trees)
+    # print("max_length_trees", max_length_trees)
 
     # To get list of all posible node list (ancestor nodes to make a tree)
     final_trees = get_node_list(max_length_trees, data)
@@ -405,7 +407,7 @@ def get_tag_tree(response):
     trees_list = []
 
     nested_object_list_size = len(json.dumps(nested_object_list))
-    print(nested_object_list_size)
+    # print(nested_object_list_size)
 
     if nested_object_list_size > 3000:
         for nested_object, correct_level in zip(nested_object_list, correct_levels):
@@ -418,7 +420,7 @@ def get_tag_tree(response):
         final_trimed_tag_tree = get_final_trimed_tag_tree(trees_list)
     else:
         final_trimed_tag_tree = trees_list
-    print(trees_list)
+    # print(trees_list)
 
     final_tag_tree = []
 
