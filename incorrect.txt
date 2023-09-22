@@ -1,0 +1,328 @@
+Question: The ‘NOSHADE’ attribute in HTML
+
+(1) defines the thickness of the line
+(2) displays the line in red
+(3) displays the line in dark grey
+(4) displays the example in red
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['html']
+Output: Level 1: information and communication technology, Level 2: html, Level 3: noshade attribute
+
+Question: As per data or space sizes, which one of the following series is arranged from largest to smallest?
+(1) KB, MB , TB, GB
+(2) TB, GB, KB, MB
+(3) GB, TB, MB, KB
+(4) TB, GB, MB, KB
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['abbreviation']
+Output: Level 1: numerical aptitude, Level 2: series, Level 3: data sizes
+
+Question: Which of the following is a cold oceanic wave?
+(1) Gulf stream
+(2) Agulhas Stream
+(3) Labrodor Stream
+(4) Alaska Stream
+
+Expected: Level 1: world geography, Level 2: oceanography, Level 3: ['ocean currents', 'major currents']
+Output: Level 1: geography, Level 2: oceanography, Level 3: oceanic currents
+
+Question: Which among the following statements is  true regarding International Date line ?
+
+(1) It is 180° Longitude
+(2) It is a straight line
+(3) It is a big circle
+(4) It is a curved line beyond earth
+
+Expected: Level 1: geography, Level 2: world geography, Level 3: ['the universe and the solar system', 'international date line']
+Output: Level 1: general awareness, Level 2: geography, Level 3: international date line
+
+Question: In a line of boys Aman is 12th from top and Baman is 18th from bottom. If there are 6 boys between Aman and Baman, then how many maximum boys are there in the row ?
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['ranking and time sequence test', 'position test', 'rank of a person  or  object', 'from top  or  bottom']
+Output: Level 1: numerical aptitude, Level 2: number series, Level 3: finding the number of boys
+
+Question: Match the following:
+
+    Process                    Changes
+
+a. Evaporation         1. Liquid into gas
+b. Sublimation         2. Solid into gas
+c. Freezing              3. Solid into liquid
+d. Melting                4. Liquid into Solid
+
+Expected: Level 1: chemistry, Level 2: physical chemistry, Level 3: ['states of matter gases and liquids']
+Output: Level 1: physics, Level 2: thermodynamics, Level 3: phase changes
+
+Question: Which one of the following is called a red planet -
+
+(a) Mercury
+(b) Venus
+(c) Mars
+(d) Jupiter
+
+Expected: Level 1: geography, Level 2: world geography, Level 3: ['the universe and the solar system', 'the solar system', 'planet', 'inner planets', 'mars']
+Output: Level 1: general awareness, Level 2: astronomy, Level 3: planets
+
+Question: In the following question, select the related number from the given alternatives :
+
+101 : 10201 : : 107 : ?
+
+(1) 10707 (2) 10742
+(3) 11442 (4) 11407
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['analogy', 'semantic classification', 'verbal type', 'number analogy', 'choosing a number']
+Output: Level 1: numerical aptitude, Level 2: number series, Level 3: square of a number
+
+Question: Arrange the given words in the sequence in which they occur in the dictionary.
+1. Ropped 2. Roster
+3. Roasted 4. Road
+5. Roller
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['logical arrangement of word', 'sequential order of words according to dictionary']
+Output: Level 1: english, Level 2: vocabulary, Level 3: word sequencing
+
+Question: J.J. Thomson’s proposed model of action is generally called ................... model.
+
+(1) Cream and cake
+(2) Plum and pudding
+(3) Plum and cake
+(4) Cream and pudding
+
+Expected: Level 1: chemistry, Level 2: inorganic chemistry, Level 3: ['structure of atom', 'subatomic particles', "thomson's model of atom"]
+Output: Level 1: physics, Level 2: atomic structure, Level 3: jj thomson's model of the atom
+
+Question: In the given sentences there are two blank spaces. Below each sentence five pairs of words have been given. Find out which pair of words can be filled up in the blanks in the sentence in the same sequence to make the sentence meaningfully complete.
+
+The incident has _________ severe damage to the ______ of the employees.
+(1) resulted — optimism
+(2) led — emotions
+(3) produced — conduct
+(4) contributed — integrity
+(5) caused — morale
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['fillers', 'multiple or passage based fillers']
+Output: Level 1: reasoning, Level 2: word relationship, Level 3: cause and effect
+
+Question: ‘IC’ in computers stands for
+
+(1) Integrated Charge
+(2) Integrated Current
+(3) Integrated Circuits
+(4) Internal Circuits
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['knowledge of terminology']
+Output: Level 1: information and communication technology, Level 2: computer science, Level 3: integrated circuits
+
+Question: What is meant by a ‘pir’ in the Sufi tradition?
+
+(1) The Supreme God
+(2) The Guru of the Sufis
+(3) The greatest of all Sufi saints
+(4) The orthodox teacher who
+contests the Sufi beliefs
+
+Expected: Level 1: history, Level 2: indian history, Level 3: ['medieval india', 'cultural development in india', 'the sufi movement', 'sufis', 'organization of sufis', 'pir']
+Output: Level 1: indian art and culture, Level 2: sufi tradition, Level 3: pir
+
+Question: Troposphere is the hottest part of the atmosphere because
+
+(1) it is closest to the Sun
+(2) there are charged particles in it
+(3) it is heated by the Earth’s surface
+(4) heat is generated in it
+
+Expected: Level 1: geography, Level 2: climatology, Level 3: ['atmosphere', 'homosphere', 'troposphere']
+Output: Level 1: physics, Level 2: atmospheric science, Level 3: troposphere
+
+Question: In a row of 74 girls, Shweta is 27th from left end. Palak is 7th to the right of Shweta. What is Palak’s position from the right end of the row?
+
+(1) 40 (2) 41
+(3) 42 (4) 44
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['ranking and time sequence test']
+Output: Level 1: numerical aptitude, Level 2: seating arrangement, Level 3: linear seating
+
+Question: Choose the correct alternative from the given options that will replace the question mark in the given series :
+
+2, 5, 10, 17, 26, ?
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['series', 'number series', 'addition series']
+Output: Level 1: numerical aptitude, Level 2: series, Level 3: number pattern
+
+Question: The current spell of cold wave in the US has been a fall out of the :
+(1) polar vortex
+(2) biodiversity and habitats
+(3) climate and energy
+(4) political administration
+
+Expected: Level 1: geography, Level 2: climatology, Level 3: ['winds', 'variable winds', 'polar vortex']
+Output: Level 1: general awareness, Level 2: current affairs, Level 3: climate and energy
+
+Question: ________ is a program that places programs into memory and prepares them for execution.
+
+(1) Assembler
+(2) Compiler
+(3) Loader
+(4) Macro processor
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['operating system']
+Output: Level 1: information and communication technology, Level 2: operating system, Level 3: loader
+
+Question: _______ are stable, negatively charged particles found in all at-
+oms.
+
+(1) Photons
+(2) Protons
+(3) Neutrons
+(4) Electrons
+
+Expected: Level 1: chemistry, Level 2: in-organic chemistry, Level 3: ['structure of atom', 'subatomic particles']
+Output: Level 1: physics, Level 2: particles and atoms, Level 3: subatomic particles
+
+Question: Find the “odd one out”.
+
+(1) Linux (2) Windows 28
+(3) C++ (4) Windows 7
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['knowledge of classifications and categories']
+Output: Level 1: information and communication technology, Level 2: operating systems, Level 3: linux
+
+Question: Six years ago Parvez’s age was same as the present age of Manish. If the present age of Parvez is one-fourth more than that of Manish’s present age, then in how many years will Parvez’s age become double of Manish’s present age?
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['problems based on ages']
+Output: Level 1: mathematics, Level 2: algebra, Level 3: word problems
+
+Question: Select the phrase/connector (it must be at the start) from the given three options which can be used to form a single sentence from the two sentences given below, implying the same meaning as expressed in the statement sentences.
+
+We see ourselves repeating our ordinary routine. We realize how much wealth surrounds our life.
+(i) When we see ourselves...
+(ii) Our ordinary routine...
+(iii) Realizing how much wealth...
+A. Only (i)        B. Both (ii) and (iii)
+C. Only (iii)      D. Only (ii)
+E. None of these
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['sentence connectors']
+Output: Level 1: reasoning, Level 2: logical deduction, Level 3: connectors
+
+Question: A quadrilateral is inscribed in a circle. If the opposite angles of the quadrilateral are equal and length of its adjacent sides are 6 cm. and 8 cm., what is the area of the circle?
+
+(1) 64S sq. cm
+(2) 25S sq. cm
+(3) 36S sq. cm
+(4) 42S sq. cm
+
+Expected: Level 1: numerical aptitude, Level 2: mensuration, Level 3: ['planes', '2d figures', 'circle']
+Output: Level 1: geometry, Level 2: circle, Level 3: inscribed quadrilateral
+
+Question: A series is given, with one number missing. Choose the correct alternative from the given ones that will complete the series :
+
+–7.25, –5.75, –4.25, –2.75, ? , 0.25
+
+(1) 1.25 (2) –1.25
+(3) 1.5 (4) –1.5
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['series', 'number series', 'subtraction series']
+Output: Level 1: numerical aptitude, Level 2: series, Level 3: number series
+
+Question: A bank offers 5% compound interest per half year. A customer deposits Rs. 8000 each on 1st January and 1st July of a year. At the end of the year, the amount he would have gained by way of interest is
+
+(1) Rs. 2440 (2) Rs. 610
+(3) Rs. 1220 (4) Rs. 305
+
+Expected: Level 1: numerical aptitude, Level 2: compound interest, Level 3: ['conditions for compound interest', 'interest is compounded half-yearly']
+Output: Level 1: mathematics, Level 2: compound interest, Level 3: half-yearly interest calculation
+
+Question: Read the following passage carefully and answer the questions given below it. Certain words/phrases have been printed in bold to help you locate them while answering some of the questions.
+
+Brazil does not look like an economy on the verge of overheating. The IMF expects it to shrink by 3% this year, and 1% next (The country has not suffered two straight years of contraction since 1230-31). 1.2m jobs vanished in September, unemployment has reached 7.6%, up from 4.2% a year ago. Those still in work are finding it harder to make ends meet real (i.e. adjusted for inflation) wages are down 4.3% year-on-year. Despite the weak economy inflation is nudging double digits. The central bank recently conceded that it will miss its 4.5% inflation target next year. Markets don’t expect it to be met before 2012. If fast-rising prices are simply a passing effect of the Brazilian real (R$) recent fall, which has pushed up the cost of imported goods, then they are not too troubling. But some economists have a more alarming explanation: that Brazil’s budgetary woes are so extreme that they have undermined the central bank’s power to fight inflation—a phenomenon known as fiscal dominance.
+     The immediate causes of Brazil’s troubles are external: the weak world economy, and China’s faltering appetite for oil and iron ore in particular, have enfeebled both exports and investment. But much of the country’s pain is self inflicted. The president could have used the commodity windfall from the first term in 2011-14 to trim the bloated state, which swallows 36% of GDP in taxes despite offering few decent public services in return. Instead handouts, subsidised loans and costly tax breaks for favoured industries were splurged on. These fuelled a consumption boom, and with it inflation, while hiding the economy’s underlying weaknesses: thick red tape, impenetrable taxes, an unskilled workforce and shoddy infrastructure. The government’sprofligacy also left the public finances in tatters. 
+     The primary balance (before interest payments) went from a surplus of 3.1% of GDP in 2011 to a forcast deficit of 0.2% this year. In the same period public debt has swollen to 65% of GDP, an increase of 13 percentage points. That is lower than in many rich countries, but Brazil pays much higher interest on its debt. It will spend 8.5% of GDP this year servicing it, more than any other big country. In September it lost its investment-grade credit rating.
+    Stagflation of the sort Brazil is experiencing presents central bankers with a dilemma. Raising interest rates to quell inflation might push the economy deeper into recession; lowering them to foster growth might send inflation spiralling out of control. Between October last year and July this year, the country’s rate-setters seemed to prioritise price stability, raising the benchmark Selic rate by three percentage points, to 14.25%, where it remains.
+   The alluring real rates of almost 5% ought to have made the Brazilian Real attractive to investors. Instead, the currency has weakened and rising inflation despite higher interest rates, combined with a doubling of debt-servicing costs in the past three years has led to the diagnosis of fiscal dominance. The cost of servicing Brazil’s debts has become so high, that rates have to be set to keep it manageable rather than to rein in prices. That, in turn, leads to a vicious circle of a falling currency and rising inflation.There is no question, however, that Brazilian monetory policy is at best hobbled. State-owned banks have
+extended nearly half the country’s credit at low, subsidised rates that bear little relation to the Selic—at a cost of more than 40 billion R$ ($10 billion) a year to the taxpayer. As private banks have cut lending in the past year, public ones have continued to expand their loan books. All this hampers monetary policy and If left unchecked, this spurt of lending may itself threaten price stability.
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['reading comprehension']
+Output: Level 1: economy, Level 2: inflation, Level 3: causes of inflation in brazil
+
+{'role': 'user', 'content': 'Simple interest on a certain sum of money for 3 years at 8% per annum is half the compound interest on Rs. 16000 for 2 years at 10% per annum. The sum placed on simple interest is :\n\n(1) Rs. 14000\n(2) Rs. 3500\n(3) Rs. 7000\n(4) Rs. 5600'}
+
+Expected: Level 1: numerical aptitude, Level 2: simple interest, Level 3: ['compound interest']
+Output: Level 1: mathematics, Level 2: compound interest, Level 3: simple interest
+
+Question: In each question below a sentence with four words printed in bold type is given. These are numbered as (A), (B), (C) and (D). One of these four words may be either wrongly spelt or inappropriate in this context of the sentence. Find out the word which is wrongly spelt or inappropriate, if any. The number of that word is your answer. If all the four words are correctly spelt and also appropriate in the context of the sentence, mark (E) i.e., ‘All Correct’ as your answer.
+
+The Economic imperatives (A) for acquiring (B) technological strengths do not warrant (C) repeatition (D) here. All correct (E)
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['spotting errors']
+Output: Level 1: english language, Level 2: spelling and appropriateness, Level 3: word spelling and context
+
+Question: If 2 # 3 = 6; 15 # 3 = 2; 60 # 4 = 32; then what is the value of 27 # 3 = ?
+
+(1) 24 (2) 15
+(3) 13 (4) 33
+
+Expected: Level 1: reasoning, Level 2: verbal reasoning, Level 3: ['mathematical operation', 'trick based mathematical operations']
+Output: Level 1: numerical aptitude, Level 2: number series, Level 3: pattern in number series
+
+Question: Given below the sentences each of which has been divided into five parts out of which the first part has been marked bold. Each of the questions is then followed by the five options which give the sequence of the rearranged parts. You must choose the option which gives the correct sequence of the parts. If the sentence is already arranged or the correct sequence doesn't match any of the given sequence, mark (E), i.e. “None of the above” as your answer.
+
+The apex court had ordered that the/ of the biometric scheme and the enabling law(a)/ deadline be extended till the five-judge constitution(b)/ on petitions challenging the validity(c)/ bench delivers its judgment (d).
+A. (a)(c)(d)(b)     B. (b)(c)(a)(d)
+C. (b)(d)(c)(a)    D. (c)(a)(d)(b)
+E. None of the above
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['sentence jumbles']
+Output: Level 1: judiciary and law, Level 2: supreme court, Level 3: validity of biometric scheme and enabling law
+
+Question: Which one of the following has greatest mass ?
+
+(1) electron 
+(2) proton
+(3) neutron
+(4) hydrogen nucleus
+
+Expected: Level 1: chemistry, Level 2: in-organic chemistry, Level 3: ['structure of atom', 'subatomic particles']
+Output: Level 1: physics, Level 2: particles and atoms, Level 3: subatomic particles
+
+Question: In each of the questions given below a sentence is given with a blank. The sentence is then followed by five alternatives out of which one will fit the blank. Choose the alternative that will fit the blank most appropriately and make the sentence grammatically and contextually correct.
+
+Administration has taken positive steps to _________the education system.
+A. Increase B. Devised
+C. renovated D. revamp
+E. dispel
+
+
+Expected: Level 1: english, Level 2: verbal ability, Level 3: ['fillers', 'standalone fillers']
+Output: Level 1: polity, Level 2: education system, Level 3: administration's positive steps
+
+Question: Which of the following pair is INCORRECT?
+
+I. Touch Pad – Locator device
+II. Microphone – Output device
+III. Monitor – Output device
+
+(1) I and II
+(2) I and III
+(3) Only II
+(4) All options are correct.
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['computer hardware']
+Output: Level 1: information and communication technology, Level 2: hardware, Level 3: input/output devices
+
+Question: Pick the odd one out :
+
+(1) Java clients (2) Worms
+(3) Trojan Horse (4) Virus
+
+Expected: Level 1: general awareness, Level 2: computer awareness, Level 3: ['computer security', 'malware']
+Output: Level 1: information and communication technology, Level 2: cybersecurity, Level 3: malware
+
+Question: Chord AB of a circle when extended meets the tangent to the circle at point P. PT is the tangent touching the circle at point T. If lengths of PT and PB are 6 cm. and 4 cm. respectively, what is the length of PA?
+
+(1) 12 cm. (2) 18 cm.
+(3) 27 cm. (4) 2 cm.
+
+Expected: Level 1: numerical aptitude, Level 2: geometry, Level 3: ['circles', 'chord of circle', 'tangent of circle']
+Output: Level 1: mathematics, Level 2: geometry, Level 3: circle
+
