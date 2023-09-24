@@ -6,20 +6,21 @@ from typing import Optional, Sequence, Set
 import numpy as np
 import json
 from evals.record import Event
+import re
 
 # Import the ModelEmbeddings class from the misc module
-from string2string.misc import ModelEmbeddings
+# from string2string.misc import ModelEmbeddings
 
 # Import the CosineSimilarity class from the similarity module
-from string2string.similarity import CosineSimilarity
+# from string2string.similarity import CosineSimilarity
 
 # Create an instance of the ModelEmbeddings class (if device is not specified, it will be automatically detected)
-bart_model = ModelEmbeddings(
-    model_name_or_path='facebook/bart-large'
-)
+# bart_model = ModelEmbeddings(
+#     model_name_or_path='facebook/bart-large'
+# )
 
-# Create an instance of the CosineSimilarity class
-cosine_similarity = CosineSimilarity()
+# # Create an instance of the CosineSimilarity class
+# cosine_similarity = CosineSimilarity()
 
 
 def get_accuracy(events: Sequence[Event]) -> float:
@@ -90,22 +91,22 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input) -
                 file.write(f"Question: {user_input['content']}\n\nExpected: Level 1: {expected_level_1}, Level 2: {expected_level_2}, Level 3: {expected_level_3}\nOutput: Level 1: {level_1}, Level 2: {level_2}, Level 3: {level_3}\n\n")
         if expected_level_2 == level_2 or expected_level_2 == level_3:
             subject_accuracy += 20 if expected_arr_length == 3 else 40
-        elif expected_level_2:
-            similarity_input = [expected_level_2, level_2, level_3]
-            if None in similarity_input:
-                similarity_input = [item for item in similarity_input if item is not None]
-            result = similarity_checker(similarity_input)
-            if result == True:
-                subject_accuracy += 20 if expected_arr_length == 3 else 40
+        # elif expected_level_2:
+        #     similarity_input = [expected_level_2, level_2, level_3]
+        #     if None in similarity_input:
+        #         similarity_input = [item for item in similarity_input if item is not None]
+        #     result = similarity(similarity_input)
+        #     if result == True:
+        #         subject_accuracy += 20 if expected_arr_length == 3 else 40
         if level_2 in expected_level_3 or level_3 in expected_level_3:
             subject_accuracy += 30
-        elif expected_level_3:
-            similarity_input = expected_level_3 + [level_2, level_3]
-            if None in similarity_input:
-                similarity_input = [item for item in similarity_input if item is not None]
-            result = similarity_checker(similarity_input)
-            if result == True:
-                subject_accuracy += 30
+        # elif expected_level_3:
+        #     similarity_input = expected_level_3 + [level_2, level_3]
+        #     if None in similarity_input:
+        #         similarity_input = [item for item in similarity_input if item is not None]
+        #     result = similarity(similarity_input)
+        #     if result == True:
+        #         subject_accuracy += 30
     else:
         if expected_level_1 == level_1:
             subject_accuracy += 50 if expected_arr_length == 3 else 60
@@ -118,9 +119,15 @@ def get_subject_tags_accuracy(subject_tags, expected_subject_tags, user_input) -
 def get_lowercase_dictionary(response, expected):
     # Convert the JSON string to a Python dictionary
     print("response", response)
-    if '.' in response:
-        response = response.replace('.', '')
-    response_dict = json.loads(response)
+    # if '.' in response:
+    #     response = response.replace('.', '')
+    
+    # Regex to find response JSON
+    pattern = r'{[^}]+}'
+
+    # Use re.findall to extract all matches
+    match = re.findall(pattern, response)
+    response_dict = json.loads(match[0])
 
     # Replace None with an empty string in the data dictionary
     for key, value in response_dict.items():
@@ -204,24 +211,94 @@ def get_each_sample_accuracy(response, expected, user_input) -> float:
     }
 
 
-def similarity_checker(sentences):
-    similarity_result = False
-    embeds = []
+# def similarity_checker(sentences):
+#     similarity_result = False
+#     embeds = []
 
-    # Compute the sentence embeddings for each sentence
-    for sentence in sentences:
-        embedding = bart_model.get_embeddings(sentence, embedding_type='mean_pooling')
-        embeds.append(embedding)
+#     # Compute the sentence embeddings for each sentence
+#     for sentence in sentences:
+#         embedding = bart_model.get_embeddings(sentence, embedding_type='mean_pooling')
+#         embeds.append(embedding)
 
-    # Compute the cosine similarity between each pair of embeddings
-    for i in range(1):
-        for j in range(i + 1, len(embeds)):
-            result = cosine_similarity.compute(embeds[i], embeds[j], dim=1).item()
-            # print(f'The cosine similarity between the BART embeddings of Expeected Level: {sentences[i]} and Output Level: {sentences[j]} is {result:.2f}')
-            if result >= 0.82:
-                similarity_result = True
-                return similarity_result
-    return similarity_result
+#     # Compute the cosine similarity between each pair of embeddings
+#     for i in range(1):
+#         for j in range(i + 1, len(embeds)):
+#             result = cosine_similarity.compute(embeds[i], embeds[j], dim=1).item()
+#             # print(f'The cosine similarity between the BART embeddings of Expeected Level: {sentences[i]} and Output Level: {sentences[j]} is {result:.2f}')
+#             if result >= 0.82:
+#                 similarity_result = True
+#                 return similarity_result
+#     return similarity_result
+
+def similarity(str1, str2):
+    stop_words = [
+        "usually", "us", "upon", "until", "under", "use", "relate", "related", "relatively", "regarding",
+        "quite", "n", "necessary", "to", "based", "than", "that", "those", "this", "there", "three", "o",
+        "of", "one", "or", "on", "a", "after", "an", "any", "and", "are", "accordingly", "among", "all", "as",
+        "vs", "v", "via", "very", "versus", "k", "g", "go", "b", "by", "both", "but", "be", "because",
+        "between", "h", "how", "w", "was", "why", "what", "when", "where", "while", "whose", "s", "should",
+        "said", "so", "some", "such", "since", "p", "l", "less", "ie", "ifs", "if", "i", "is", "in", "f",
+        "from", "for", "d", "did", "c", "e", "eg"
+    ]
+
+    def word_count_map(s):
+        words = re.split(r'[ -/,/]', s)
+        word_count = {}
+        for w in words:
+            w = w.lower()
+            if w in stop_words:
+                continue
+            word_count[w] = word_count.get(w, 0) + 1
+        return word_count
+
+    def add_words_to_dictionary(word_count_map, dictionary):
+        for key in word_count_map:
+            dictionary[key] = True
+
+    def word_map_to_vector(word_count_map, dictionary):
+        word_count_vector = []
+        for term in dictionary:
+            word_count_vector.append(word_count_map.get(term, 0))
+        return word_count_vector
+
+    def dot_product(vec_a, vec_b):
+        product = 0
+        for i in range(len(vec_a)):
+            product += vec_a[i] * vec_b[i]
+        return product
+
+    def magnitude(vec):
+        sum_sq = sum(x * x for x in vec)
+        return math.sqrt(sum_sq)
+
+    def cosine_similarity(vec_a, vec_b):
+        dot_prod = dot_product(vec_a, vec_b)
+        mag_a = magnitude(vec_a)
+        mag_b = magnitude(vec_b)
+
+        if mag_a == 0 or mag_b == 0:
+            return 0  # Return 0 similarity when one of the vectors has zero magnitude
+        else:
+            return dot_prod / (mag_a * mag_b)
+
+    def text_cosine_similarity(txt_a, txt_b):
+        word_count_a = word_count_map(txt_a)
+        word_count_b = word_count_map(txt_b)
+        dictionary = {}
+        add_words_to_dictionary(word_count_a, dictionary)
+        add_words_to_dictionary(word_count_b, dictionary)
+        vector_a = word_map_to_vector(word_count_a, dictionary)
+        vector_b = word_map_to_vector(word_count_b, dictionary)
+        similarity = cosine_similarity(vector_a, vector_b)
+        return similarity
+
+    def get_similarity_score(val):
+        return round(val * 100)
+
+    similarity_score = text_cosine_similarity(str1, str2)
+    # print(f"Similarity Score: {get_similarity_score(similarity_score)}%")
+
+    return get_similarity_score(similarity_score)
 
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
