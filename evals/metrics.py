@@ -10,19 +10,9 @@ import json
 import sys
 from evals.record import Event
 
-# Import the ModelEmbeddings class from the misc module
-from string2string.misc import ModelEmbeddings
-
-# Import the CosineSimilarity class from the similarity module
-from string2string.similarity import CosineSimilarity
-
-# Create an instance of the ModelEmbeddings class (if device is not specified, it will be automatically detected)
-bart_model = ModelEmbeddings(
-    model_name_or_path='facebook/bart-large'
-)
-
-# Create an instance of the CosineSimilarity class
-cosine_similarity = CosineSimilarity()
+# Open the JSON file for reading
+with open('subjectTags.json', 'r', encoding='utf-8') as file:
+    subject_tag_tree_data = json.load(file)
 
 sorted_ancestors_list = []
 
@@ -51,25 +41,17 @@ def get_size(obj, seen=None):
     return size
     
 
-def get_lowercase_dictionary(response):
+def get_subject_tag_dict(response):
+    # Regex to find response JSON
+    pattern = r'{[^}]+}'
+
+    # To extract all matches
+    matches = re.findall(pattern, response)
+
     # Convert the JSON string to a Python dictionary
-    print("response", response)
-    response_dict = json.loads(response)
+    response_dict = json.loads(matches[0])
 
-    # Replace None with an empty string in the data dictionary
-    for key, value in response_dict.items():
-        if value is None:
-            response_dict[key] = ""
-
-    # Lowercase dictionary while handling None values
-    response_lowercase_dict = {
-        key.lower(): value.lower() if value is not None and isinstance(value, str) else (
-            [item.lower() for item in value] if isinstance(value, list) and all(isinstance(item, str) for item in value) else value
-        )
-        for key, value in response_dict.items()
-    }
-
-    return response_lowercase_dict
+    return response_dict
 
 def get_subject_and_skill_tags(response_dict, expected_dict):
     subject_tags = {}
@@ -83,7 +65,7 @@ def get_subject_and_skill_tags(response_dict, expected_dict):
 
 
 
-def similarity(str1, str2):
+def get_similarity(str1, str2):
     stop_words = [
         "usually", "us", "upon", "until", "under", "use", "relate", "related", "relatively", "regarding",
         "quite", "n", "necessary", "to", "based", "than", "that", "those", "this", "there", "three", "o",
@@ -153,82 +135,94 @@ def similarity(str1, str2):
 
     return get_similarity_score(similarity_score)
 
-def get_parent_child_ids(level_1, level_2, level_3, data):
-    parent = ''
-    parent_id = ''
-    child_1_ids = []
-    child_2_ids = []
-    child_1_ids_similar = []
-    child_2_ids_similar = []
+def get_subject_tags_id(level_1, level_2, level_3):
+    level_1_name = ''
+    level_1_id = ''
+    level_2_ids = []
+    level_3_ids = []
+    level_2_similar_ids = []
+    level_3_similar_ids = []
 
-    for key, value in data.items():
-        id = value.get('id')
-        name = value.get('name').lower()
-        height = value.get('height')
+    for key, value in subject_tag_tree_data.items():
+        id = value['id']
+        name = value['name'].lower()
+        height = value['height']
         if level_1 == name and height == 0:
-            parent = name
-            parent_id = id
-        if level_2 == name:
-            child_1_ids.append(id)
-        elif level_2 and similarity(level_2, name) > 75:
-            child_1_ids_similar.append(id)
-        if level_3 == name:
-            child_2_ids.append(id)
-        elif level_3 and similarity(level_3, name) > 75:
-            child_2_ids_similar.append(id)
+            level_1_name = name
+            level_1_id = id
+        elif level_2 == name:
+            level_2_ids.append(id)
+        elif level_3 == name:
+            level_3_ids.append(id)
+        elif level_2 and get_similarity(level_2, name) > 90:
+            print("similarity_level_2*****", level_2, name, get_similarity(level_2, name))
+            level_2_similar_ids.append(id)
+        elif level_3 and get_similarity(level_3, name) > 90:
+            print("similarity_level_3*****", level_2, name, get_similarity(level_2, name))
+            level_3_similar_ids.append(id)
 
-    return parent_id, child_1_ids, child_2_ids, child_1_ids_similar, child_2_ids_similar
+    return level_1_id, level_2_ids, level_3_ids, level_2_similar_ids, level_3_similar_ids
 
-def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
+"""
+    To get related nodes
+    Comparing nodes(levels) with there ancestors to get its parent
+    returning the max length tree
+"""
+def get_related_nodes(level_1_id, level_2_ids, level_3_ids):
     tree_ids = []
-
-    if parent_id != '':
-        if len(child_1_ids) > 0:
-            for child_1_id in child_1_ids:
-                if len(child_2_ids) > 0:
-                    for child_2_id in child_2_ids:
-                        if 'ancestor' in data[child_1_id] and parent_id in data[child_1_id]['ancestor']:
-                            if 'ancestor' in data[child_2_id] and parent_id in data[child_2_id]['ancestor']:
-                                if 'ancestor' in data[child_2_id] and child_1_id in data[child_2_id]['ancestor']:
-                                    tree_ids.append([parent_id, child_1_id, child_2_id])
-                                elif 'ancestor' in data[child_1_id] and child_2_id in data[child_1_id]['ancestor']:
-                                    return "Response is inverted"
+    # Compare levels with there ancestors to get its parent(related nodes)
+    if level_1_id:
+        if level_2_ids:
+            for level_2_id in level_2_ids:
+                if level_3_ids:
+                    for level_3_id in level_3_ids:
+                        if 'ancestor' in subject_tag_tree_data.get(level_2_id, {}):
+                            if 'ancestor' in subject_tag_tree_data.get(level_3_id, {}):
+                                if level_1_id in subject_tag_tree_data[level_2_id]['ancestor']:
+                                    if level_1_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                                        if level_2_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                                            tree_ids.append([level_1_id, level_2_id, level_3_id])
+                                        else:
+                                            tree_ids.append([level_1_id, level_3_id])
+                                    else:
+                                        tree_ids.append([level_1_id, level_2_id])
+                                elif level_1_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                                    tree_ids.append([level_1_id, level_3_id])
                                 else:
-                                    tree_ids.append([parent_id, child_1_id])
-                                    tree_ids.append([parent_id, child_2_id])
+                                    tree_ids.append([level_1_id])
+                            elif level_1_id in subject_tag_tree_data[level_2_id]['ancestor']:
+                                tree_ids.append([level_1_id, level_2_id])
                             else:
-                                tree_ids.append([parent_id, child_1_id])
-                        elif 'ancestor' in data[child_2_id] and parent_id in data[child_2_id]['ancestor']:
-                            tree_ids.append([parent_id, child_2_id])
-                        else:
-                            tree_ids.append([parent_id])
-                elif 'ancestor' in data[child_1_id] and parent_id in data[child_1_id]['ancestor']:
-                    tree_ids.append([parent_id, child_1_id])
+                                tree_ids.append([level_1_id])
+                        elif 'ancestor' in subject_tag_tree_data.get(level_3_id, {}):
+                            if level_1_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                                tree_ids.append([level_1_id, level_3_id])
+                            else:
+                                tree_ids.append([level_1_id])
+                elif 'ancestor' in subject_tag_tree_data.get(level_2_id, {}):
+                    if level_1_id in subject_tag_tree_data[level_2_id]['ancestor']:
+                        tree_ids.append([level_1_id, level_2_id])
+                    else:
+                        tree_ids.append([level_1_id])
                 else:
-                    tree_ids.append([child_1_id])
-        elif len(child_2_ids) > 0:
-            for child_2_id in child_2_ids:
-                if 'ancestor' in data[child_2_id] and parent_id in data[child_2_id]['ancestor']:
-                    tree_ids.append([parent_id, child_2_id])
+                    tree_ids.append([level_1_id])
+        elif level_3_ids:
+            for level_3_id in level_3_ids:
+                if 'ancestor' in subject_tag_tree_data.get(level_3_id, {}):
+                    if level_1_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                        tree_ids.append([level_1_id, level_3_id])
+                    else:
+                        tree_ids.append([level_1_id])
                 else:
-                    tree_ids.append([child_2_id])
+                    tree_ids.append([level_1_id])
         else:
-            tree_ids.append([parent_id])
-    else:
-        if len(child_1_ids) > 0:
-            for child_1_id in child_1_ids:
-                if len(child_2_ids) > 0:
-                    for child_2_id in child_2_ids:
-                        if 'ancestor' in data[child_2_id] and child_1_id in data[child_2_id]['ancestor']:
-                            tree_ids.append([child_1_id, child_2_id])
-                        else:
-                            tree_ids.append([child_1_id])
-                            tree_ids.append([child_2_id])
-                else:
-                    tree_ids.append([child_1_id])
-        elif len(child_2_ids) > 0:
-            for child_2_id in child_2_ids:
-                    tree_ids.append([child_2_id])
+            tree_ids.append([level_1_id])
+    if level_2_ids and level_3_ids:
+        for level_2_id in level_2_ids:
+            for level_3_id in level_3_ids:
+                if 'ancestor' in subject_tag_tree_data.get(level_3_id, {}):
+                    if level_2_id in subject_tag_tree_data[level_3_id]['ancestor']:
+                        tree_ids.append([level_2_id, level_3_id])
 
     unique_tree_ids = []
     # To remove the duplicate lists from tree_ids
@@ -244,14 +238,14 @@ def get_related_nodes(parent_id, child_1_ids, child_2_ids, data):
 
     return max_length_tree
 
-def get_node_list(max_length_trees, data):
+def get_node_list(max_length_trees):
     final_trees = []
     for max_length_tree in max_length_trees:
         node_info = {}
         node_list = {}
         last_tree_node = max_length_tree[-1]
-        last_node = data[last_tree_node]
-        for key, value in data.items():
+        last_node = subject_tag_tree_data[last_tree_node]
+        for key, value in subject_tag_tree_data.items():
             if 'ancestor' in value and last_tree_node in value['ancestor'] and not value['children']:
                 node_list[key] = value
         node_info['node_list'] = node_list
@@ -260,7 +254,7 @@ def get_node_list(max_length_trees, data):
 
     return final_trees
 
-def get_nested_object(final_tree, data):
+def get_nested_object(final_tree):
     node_list = final_tree['node_list']
     last_node = final_tree['last_node']
     ancestors_list = []
@@ -269,15 +263,15 @@ def get_nested_object(final_tree, data):
     for key, value in node_list.items():
         ancestor_list = []
         for item in value['ancestor']:
-            name = data[item]['name']
-            height = data[item]['height']
+            name = subject_tag_tree_data[item]['name']
+            height = subject_tag_tree_data[item]['height']
             if height >= last_node['height']:
                 ancestor_list.append({'name': name, 'height': height})
         ancestor_list.append({'name': value['name'], 'height': value['height']})
         ancestors_list.append(ancestor_list)
 
-    # with open("ancestors_list.json", "a") as json_file:
-    #     json.dump(ancestors_list, json_file)
+    with open("ancestors_list.json", "a") as json_file:
+        json.dump(ancestors_list, json_file)
     global sorted_ancestors_list
     sorted_ancestors_list = [sorted(array, key=lambda x: x['height']) for array in ancestors_list]
 
@@ -299,36 +293,34 @@ def get_nested_object(final_tree, data):
     
     return nested_object
 
-def get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data):
+def get_nested_object_tree(level_1_id, level_2_ids, level_3_ids):
     nested_object_list = []
 
     # To get the related parent and child
-    max_length_trees = get_related_nodes(parent_id, child_1_ids, child_2_ids, data)
+    max_length_trees = get_related_nodes(level_1_id, level_2_ids, level_3_ids)
     print("max_length_trees", max_length_trees)
 
     # To get list of all posible node list (ancestor nodes to make a tree)
-    final_trees = get_node_list(max_length_trees, data)
-
-    # print(final_trees)
+    final_trees = get_node_list(max_length_trees)
     
     # with open("node_list.json", "a") as json_file:
     #     json.dump(final_trees, json_file)
 
     # To get nested object (Tag Tree)
     for final_tree in final_trees:
-        print(final_tree["last_node"]["name"])
-        nested_object = get_nested_object(final_tree, data)
+        # print(final_tree["last_node"]["name"])
+        nested_object = get_nested_object(final_tree)
         nested_object_list.append(nested_object)
 
     return nested_object_list, max_length_trees
 
-def get_similarity_check(correct_level, parent_id, child_1_ids, child_1_ids_similar, child_2_ids_similar, data):
+def get_similarity_check(correct_level, parent_id, child_1_ids, child_1_ids_similar, child_2_ids_similar):
     print("**************similarity******************")
     nested_object = {}
     if 'level_2' not in correct_level and 'level_3' not in correct_level:
-        nested_object = get_nested_object_tree(parent_id, child_1_ids_similar, child_2_ids_similar, data)
+        nested_object = get_nested_object_tree(parent_id, child_1_ids_similar, child_2_ids_similar)
     elif 'level_3' not in correct_level:
-        nested_object = get_nested_object_tree(parent_id, child_1_ids, child_2_ids_similar, data)
+        nested_object = get_nested_object_tree(parent_id, child_1_ids, child_2_ids_similar)
     return nested_object
 
 def get_trimed_tag_tree(sorted_ancestors_list):
@@ -358,7 +350,7 @@ def get_final_trimed_tag_tree(trees_list):
     trimed_tree = get_trimed_tag_tree(sorted_ancestors_list)
     trimed_tag_tree.append(trimed_tree)
     
-    if len(json.dumps(trimed_tree)) > 3000:
+    if len(json.dumps(trimed_tree)) > 4000:
         get_final_trimed_tag_tree(trimed_tree)
 
     # with open("trimed_tag_tree.json", "a") as json_file:
@@ -366,36 +358,37 @@ def get_final_trimed_tag_tree(trees_list):
 
     return trimed_tag_tree
 
+"""
+    To get tag tree for Prompt 2 from Prompt 1 response
+"""
 def get_tag_tree(response):
-    # To get response in lowercase
-    subject_tags = get_lowercase_dictionary(response)
+    # To convert response string into dictionary
+    subject_tag_dict = get_subject_tag_dict(response)
 
     # Levels of Subject Tags
-    level_1, level_2, level_3  = subject_tags.get('level 1', ''), subject_tags.get('level 2', ''), subject_tags.get('level 3', '')
+    level_1, level_2, level_3  = subject_tag_dict['Level 1'].lower() if subject_tag_dict['Level 1'] else [], subject_tag_dict['Level 2'].lower() if subject_tag_dict['Level 2'] else [], subject_tag_dict['Level 3'].lower() if subject_tag_dict['Level 3'] else []
 
-    # Open the JSON file for reading
-    with open('subjectTags.json', 'r') as file:
-        data = json.load(file)
+    # To get ids of parent and childs
+    level_1_id, level_2_ids, level_3_ids, level_2_similar_ids, level_3_similar_ids = get_subject_tags_id(level_1, level_2, level_3)
 
-    # get ids of parent and childs
-    parent_id, child_1_ids, child_2_ids, child_1_ids_similar, child_2_ids_similar = get_parent_child_ids(level_1, level_2, level_3, data)
+    print("==================================================")
+    print("level_1_id", level_1_id)
+    print("level_2_ids", level_2_ids)
+    print("level_3_ids", level_3_ids)
+    print("level_2_similar_ids", level_2_similar_ids)
+    print("level_3_similar_ids", level_3_similar_ids)
+    print("==================================================")
 
-    print("parent_id", parent_id)
-    print("child_1_ids", child_1_ids)
-    print("child_2_ids", child_2_ids)
-    print("child_1_ids_similar", child_1_ids_similar)
-    print("child_2_ids_similar", child_2_ids_similar)
-
-    # nested_object_list - tag tree
+    # nested_object_list - tag tree list
     # max_length_trees - To get correct levels
-    nested_object_list, max_length_trees = get_nested_object_tree(parent_id, child_1_ids, child_2_ids, data)
+    nested_object_list, max_length_trees = get_nested_object_tree(level_1_id, level_2_ids, level_3_ids)
 
     correct_levels = []
     # To get correct levels
     for max_length_tree in max_length_trees:
         correct_level = []
         for node in max_length_tree:
-            node_name = (data[node]['name']).lower()
+            node_name = (subject_tag_tree_data[node]['name']).lower()
             if node_name == level_1:
                 correct_level.append("level_1")
             if node_name == level_2:
@@ -409,14 +402,14 @@ def get_tag_tree(response):
     nested_object_list_size = len(json.dumps(nested_object_list))
     # print(nested_object_list_size)
 
-    if nested_object_list_size > 3000:
+    if nested_object_list_size > 4000:
         for nested_object, correct_level in zip(nested_object_list, correct_levels):
-            nested_object_similarity_list = get_similarity_check(correct_level, parent_id, child_1_ids, child_1_ids_similar, child_2_ids_similar, data)
+            nested_object_similarity_list = get_similarity_check(correct_level, level_1_id, level_2_ids, level_2_similar_ids, level_3_similar_ids)
             trees_list.append(nested_object_similarity_list)
     else:
         trees_list = nested_object_list
 
-    if len(json.dumps(trees_list)) > 3000:
+    if len(json.dumps(trees_list)) > 4000:
         final_trimed_tag_tree = get_final_trimed_tag_tree(trees_list)
     else:
         final_trimed_tag_tree = trees_list
@@ -428,7 +421,7 @@ def get_tag_tree(response):
         if len(json.dumps(tag_tree)) > 2:
             final_tag_tree.append(tag_tree)
 
-    return final_tag_tree
+    return final_tag_tree    
 
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
