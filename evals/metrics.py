@@ -158,7 +158,7 @@ def get_subject_tags_id(level_1, level_2, level_3):
             print("similarity_level_2*****", level_2, name, get_similarity(level_2, name))
             level_2_similar_ids.append(id)
         elif level_3 and get_similarity(level_3, name) > 90:
-            print("similarity_level_3*****", level_2, name, get_similarity(level_2, name))
+            print("similarity_level_3*****", level_3, name, get_similarity(level_3, name))
             level_3_similar_ids.append(id)
 
     return level_1_id, level_2_ids, level_3_ids, level_2_similar_ids, level_3_similar_ids
@@ -270,8 +270,8 @@ def get_nested_object(final_tree):
         ancestor_list.append({'name': value['name'], 'height': value['height']})
         ancestors_list.append(ancestor_list)
 
-    with open("ancestors_list.json", "a") as json_file:
-        json.dump(ancestors_list, json_file)
+    # with open("ancestors_list.json", "a") as json_file:
+    #     json.dump(ancestors_list, json_file)
     global sorted_ancestors_list
     sorted_ancestors_list = [sorted(array, key=lambda x: x['height']) for array in ancestors_list]
 
@@ -422,6 +422,61 @@ def get_tag_tree(response):
             final_tag_tree.append(tag_tree)
 
     return final_tag_tree    
+
+
+def get_final_tree_nodes(response):
+    pattern = r'\[[^\]]*\]'
+
+    # To extract all matches
+    matches = re.findall(pattern, response)
+
+    # Convert the JSON string to a Python dictionary
+    response_list = json.loads(matches[0])
+
+    print("response_list", response_list)
+    
+    for response in response_list:
+        if response:
+            last_element_key, last_element_value = response.popitem()
+            print("Last Element Value:", last_element_value)
+
+    list_ancestor_list = []
+
+    for key, value in subject_tag_tree_data.items():
+        if value['name'] == last_element_value:
+            print("name", value['name'])
+            ancestor_list = {}
+            for ancestor in value["ancestor"]:
+                ancestor_list[ancestor] = subject_tag_tree_data[ancestor]
+            print("ancestor_list", ancestor_list)
+            list_ancestor_list.append(ancestor_list)
+
+    list_sorted_names = []
+
+    for ancestor_list in list_ancestor_list:
+        # Extract and arrange names by height
+        names_by_height = {}
+        for key, value in ancestor_list.items():
+            height = value.get("height")
+            name = value.get("name")
+            if height not in names_by_height:
+                names_by_height[height] = []
+            names_by_height[height].append(name)
+
+        # Sort the names by height
+        sorted_names = []
+        for height in sorted(names_by_height.keys()):
+            sorted_names.extend(names_by_height[height])
+        print("sorted_names", sorted_names)
+        list_ancestor_list.append(sorted_names)
+    
+    print("list_ancestor_list", list_ancestor_list)
+            
+    
+    
+
+    
+
 
 
 def get_bootstrap_accuracy_std(events: Sequence[Event], num_samples: int = 1000) -> float:
